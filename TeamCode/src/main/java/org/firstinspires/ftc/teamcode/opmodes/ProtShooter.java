@@ -7,38 +7,55 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @Config
 @TeleOp(name = "protShooter")
 public class ProtShooter extends OpMode {
 
-    static float A_POWER = 0.55f;
-    static float X_POWER = 0.9f;
-    static float B_POWER = 1f;
+    public static float A_POWER = 0.55f;
+    public static float X_POWER = 0.9f;
+    public static float B_POWER = 1f;
+    public static boolean inverseRight = false;
+    public static boolean inverseLeft = true;
 
-    DcMotor rightMotor;
-    DcMotor leftMotor;
+
+    DcMotorEx rightMotor;
+    DcMotorEx leftMotor;
     DcMotor sweeperMotor;
 
     @Override
     public void init() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        rightMotor = hardwareMap.get(DcMotor.class, "right");
-        leftMotor = hardwareMap.get(DcMotor.class,"left");
+        rightMotor = hardwareMap.get(DcMotorEx.class, "right");
+        leftMotor = hardwareMap.get(DcMotorEx.class,"left");
         sweeperMotor = hardwareMap.get(DcMotor.class,"sweeper");
 
         rightMotor.setDirection(DcMotor.Direction.FORWARD);
         leftMotor.setDirection(DcMotor.Direction.FORWARD);
 
+
+        if (inverseLeft){
+            leftMotor.setDirection(DcMotor.Direction.REVERSE);
+        }
+        if (inverseRight){
+            rightMotor.setDirection(DcMotor.Direction.REVERSE);
+
+        }
+
         sweeperMotor.setDirection(DcMotor.Direction.FORWARD);
 
 
-        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        leftMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         sweeperMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-
+//        telemetry.speak("It's a me, Mario! Here we go!");
+//        telemetry.update();
     }
 
     @Override
@@ -75,8 +92,16 @@ public class ProtShooter extends OpMode {
         leftMotor.setPower(power);
         sweeperMotor.setPower(sweepPower);
 
+        double leftRPM = leftMotor.getVelocity();
+        double rightRPM = rightMotor.getVelocity();
+
+
         telemetry.addData("Power", power);
         telemetry.addData("sweepPower", sweepPower);
+        telemetry.addLine();
+        telemetry.addData("Left RPM",leftRPM);
+        telemetry.addData("Right RPM",rightRPM);
+
         telemetry.update();
     }
 }
