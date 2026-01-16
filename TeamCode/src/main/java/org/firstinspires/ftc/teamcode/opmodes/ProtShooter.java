@@ -14,10 +14,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 @TeleOp(name = "protShooter")
 public class ProtShooter extends OpMode {
 
-    public static float A_POWER = 0.55f;
+    public static float A_POWER = 0.5f; //checked for shooting far.
     public static float X_POWER = 0.9f;
     public static float B_POWER = 1f;
-    public static float Y_POWER = 1f;
+    public static float Y_POWER = 0.2f;
     public static boolean inverseRight = false;
     public static boolean inverseLeft = true;
     public static boolean inverseConv = true;
@@ -103,14 +103,15 @@ public class ProtShooter extends OpMode {
             convpower = 0;
         }
 
+        double leftRPM = leftMotor.getVelocity();
+        double rightRPM = rightMotor.getVelocity();
 
         rightMotor.setPower(power);
         leftMotor.setPower(power);
+
+
         sweeperMotor.setPower(sweepPower);
         convMotor.setPower(convpower);
-
-        double leftRPM = leftMotor.getVelocity();
-        double rightRPM = rightMotor.getVelocity();
 
 
         telemetry.addData("Power", power);
