@@ -14,10 +14,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 @TeleOp(name = "protShooter")
 public class ProtShooter extends OpMode {
 
-    public static float A_POWER = 0.5f; //checked for shooting far.
-    public static float X_POWER = 0.9f;
-    public static float B_POWER = 1f;
-    public static float Y_POWER = 0.2f;
+    public static double A_POWER = 0.5; //checked for shooting far.
+    public static double X_POWER = 900.0; //in ticks per second
+    public static double B_POWER = 1.0;
+    public static double Y_POWER = 0.2;
     public static boolean inverseRight = false;
     public static boolean inverseLeft = true;
     public static boolean inverseConv = true;
@@ -33,8 +33,8 @@ public class ProtShooter extends OpMode {
     public void init() {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        rightMotor = hardwareMap.get(DcMotorEx.class, "right");
-        leftMotor = hardwareMap.get(DcMotorEx.class,"left");
+        rightMotor = hardwareMap.get(DcMotorEx.class, "shooterRight");
+        leftMotor = hardwareMap.get(DcMotorEx.class,"shooterLeft");
         sweeperMotor = hardwareMap.get(DcMotor.class,"sweeper");
         convMotor = hardwareMap.get(DcMotorEx.class,"conv");
 
@@ -71,9 +71,9 @@ public class ProtShooter extends OpMode {
     public void loop() {
 //        TelemetryPacket packet = new TelemetryPacket();
 
-        float power;
-        float sweepPower;
-        float convpower;
+        double power;
+        double sweepPower;
+        double convpower;
 
         //shooter power. or A or X or right trigger.
         if (gamepad1.a) {
@@ -106,8 +106,8 @@ public class ProtShooter extends OpMode {
         double leftRPM = leftMotor.getVelocity();
         double rightRPM = rightMotor.getVelocity();
 
-        rightMotor.setPower(power);
-        leftMotor.setPower(power);
+        rightMotor.setVelocity(power);
+        leftMotor.setVelocity(power);
 
 
         sweeperMotor.setPower(sweepPower);
