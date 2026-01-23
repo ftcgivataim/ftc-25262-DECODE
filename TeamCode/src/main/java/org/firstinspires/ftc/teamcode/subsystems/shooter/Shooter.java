@@ -65,7 +65,7 @@ public class Shooter {
             double velRight = right.getVelocity();
             packet.put("leftVel", velLeft);
             packet.put("rightVel", velRight);
-            return velLeft != velTPS && velRight != velTPS;
+            return velLeft != velTPS || velRight != velTPS;
         }
 
 
@@ -92,7 +92,7 @@ public class Shooter {
             double velRight = right.getVelocity();
             telemetryPacket.put("leftVel", velLeft);
             telemetryPacket.put("rightVel", velRight);
-            return velLeft != 0 && velRight != 0;
+            return velLeft != 0 || velRight != 0;
         }
     }
 

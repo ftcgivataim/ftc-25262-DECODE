@@ -20,7 +20,7 @@ public class LearningAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        Pose2d initialPose = new Pose2d(11.8, 61.7, Math.toRadians(90));
+        Pose2d initialPose = new Pose2d(0, 0, Math.toRadians(90));
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
@@ -31,26 +31,13 @@ public class LearningAuto extends LinearOpMode {
         //TODO - Build Movement Trajectory
 
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .lineToYSplineHeading(33, Math.toRadians(0))
-                .waitSeconds(2)
-                .setTangent(Math.toRadians(90))
-                .lineToY(48)
-                .setTangent(Math.toRadians(0))
-                .lineToX(32)
-                .strafeTo(new Vector2d(44.5, 30))
-                .turn(Math.toRadians(180))
-                .lineToX(47.5)
-                .waitSeconds(3);
+                .strafeTo(new Vector2d(20, 0))
+                .strafeTo(new Vector2d(0, 20))
+                .strafeTo(new Vector2d(-20, 0))
+                .strafeTo(new Vector2d(0, -20));
 
         Action tab1Action = tab1.build();
 
-
-        Action trajectoryActionCloseOut = tab1.fresh()
-                .strafeTo(new Vector2d(48, 12))
-                .build();
-
-        // TODO actions that need to happen on init; for instance, a claw tightening.
-        //Actions.runBlocking(claw.closeClaw());
 
 
         while (!isStopRequested() && !opModeIsActive()) {
@@ -67,12 +54,7 @@ public class LearningAuto extends LinearOpMode {
         if (isStopRequested()) return;
 
         Actions.runBlocking(
-                new SequentialAction(
-                        new ParallelAction(
-//                                lift.liftUp(),
-                                trajectoryActionChosen),// TODO add actions to perform and also build trajectories
-                        trajectoryActionCloseOut
-                )
+                tab1Action
         );
     }
 }
