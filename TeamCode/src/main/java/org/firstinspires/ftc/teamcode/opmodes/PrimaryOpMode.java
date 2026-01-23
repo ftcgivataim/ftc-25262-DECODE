@@ -48,11 +48,11 @@ public class PrimaryOpMode extends LinearOpMode {
 
         public double kP = 1;
         public double kI = 0;
-        public double kD = 0;
+        public double kD = 1;
 
         public boolean isBlue = true;
 
-        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS,0);
+        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS,Math.toRadians(90));
 
 
     }
@@ -63,7 +63,6 @@ public class PrimaryOpMode extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         TelemetryPacket packet = new TelemetryPacket();
-
 
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeft");
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeft");
@@ -109,6 +108,8 @@ public class PrimaryOpMode extends LinearOpMode {
         odo.setPosition(PARAMS.startingPose);
         odo.update();
 
+        double prevAngle = odo.getPosition().getHeading(AngleUnit.RADIANS);;
+
         PIDController pid = new PIDController(PARAMS.kP, PARAMS.kI, PARAMS.kD);
         pid.setSetPoint(Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue));
 
@@ -118,6 +119,7 @@ public class PrimaryOpMode extends LinearOpMode {
 
         boolean intakeMode = false;
 
+        boolean goalLock = false;
 
 
         waitForStart();
@@ -135,7 +137,7 @@ public class PrimaryOpMode extends LinearOpMode {
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            boolean goalLock = gamepad1.b;
+            goalLock = gamepad1.b ^ goalLock;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
@@ -145,20 +147,27 @@ public class PrimaryOpMode extends LinearOpMode {
             /* ##################################################
                         Movement Controls Calculations
                ################################################## */
+
             odo.update();
             Pose2D pose = odo.getPosition();
 
+            double botHeading = unwrapAngle(prevAngle, pose.getHeading(AngleUnit.RADIANS))%(Math.PI*2); // Use unwrapping here
+
+            prevAngle = odo.getPosition().getHeading(AngleUnit.RADIANS);
+
+            telemetry.addData("botHeading", botHeading);
+            telemetry.addData("goalAngle:", Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue));
+
             pid.setSetPoint(Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue));
 
-            double heading = pose.getHeading(AngleUnit.RADIANS);
-            double rotX = x * Math.cos(heading) - y * Math.sin(-heading);
-            double rotY = x * Math.sin(-heading) + y * Math.cos(heading);
+            double rotX = x * Math.cos(botHeading) - y * Math.sin(-botHeading);
+            double rotY = x * Math.sin(-botHeading) + y * Math.cos(botHeading);
 
             rotX *= PARAMS.speedMult;
             rotY *= PARAMS.speedMult;
 
             if (goalLock){
-                rx = pid.calculate(heading);
+                rx = pid.calculate(botHeading);
             }
             else
                 rx *= PARAMS.turnMult;
@@ -239,6 +248,19 @@ public class PrimaryOpMode extends LinearOpMode {
             telemetry.update();
 
         }
+
+
+
+    }
+
+    private double unwrapAngle(double previousAngle, double currentAngle) {
+        double delta = currentAngle - previousAngle;
+        if (delta > Math.PI) {
+            delta -= 2 * Math.PI;
+        } else if (delta < -Math.PI) {
+            delta += 2 * Math.PI;
+        }
+        return previousAngle + delta;
     }
 
 }

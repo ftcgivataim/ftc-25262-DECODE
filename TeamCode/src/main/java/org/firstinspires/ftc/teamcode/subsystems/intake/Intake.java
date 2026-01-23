@@ -11,6 +11,7 @@ public class Intake {
 
     public Intake(HardwareMap hardwareMap) {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "sweeper");
+        intakeMotor.setDirection(DcMotorEx.Direction.REVERSE);
     }
 
 //    public class SpinUp implements Action {

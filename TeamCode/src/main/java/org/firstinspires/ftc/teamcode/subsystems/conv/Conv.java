@@ -15,6 +15,8 @@ public class Conv {
 
     public Conv(HardwareMap hardwareMap) {
         convMotor = hardwareMap.get(DcMotorEx.class, "conv");
+        convMotor.setDirection(DcMotorEx.Direction.REVERSE);
+
     }
 
     public class Load implements Action {
@@ -23,7 +25,7 @@ public class Conv {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
-                convMotor.setPower(0.2);
+                convMotor.setPower(0.5);
                 initialized = true;
             }
 
