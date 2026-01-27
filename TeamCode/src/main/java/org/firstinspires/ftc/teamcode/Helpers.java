@@ -14,8 +14,8 @@ public class Helpers {
         Pose2D goalPose = isBlue ? GOAL_POSE_BLUE : GOAL_POSE_RED;
 
         double angle = Math.atan2(
-                goalPose.getX(DistanceUnit.INCH) - pose.getX(DistanceUnit.INCH),
-                goalPose.getY(DistanceUnit.INCH) - pose.getY(DistanceUnit.INCH)
+                goalPose.getY(DistanceUnit.INCH) - pose.getY(DistanceUnit.INCH), // Y comes first!
+                goalPose.getX(DistanceUnit.INCH) - pose.getX(DistanceUnit.INCH)  // X comes second
         );
         if (angle < 0){
             return angle + 2*Math.PI;

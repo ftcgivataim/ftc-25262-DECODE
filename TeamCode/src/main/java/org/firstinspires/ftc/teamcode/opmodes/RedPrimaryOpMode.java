@@ -4,17 +4,10 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
-import com.acmerobotics.roadrunner.ParallelAction;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -32,14 +25,12 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 
 @Config
-@TeleOp(name = "BluePrimaryOpMode")
-public class PrimaryOpMode extends LinearOpMode {
+@TeleOp(name = "RedPrimaryOpMode")
+public class RedPrimaryOpMode extends LinearOpMode {
 
     private final FtcDashboard dash = FtcDashboard.getInstance();
     private List<Action> runningActions = new ArrayList<>();
@@ -57,9 +48,9 @@ public class PrimaryOpMode extends LinearOpMode {
         public double kI = 0;
         public double kD = 1;
 
-        public boolean isBlue = true;
+        public boolean isBlue = false;
 
-        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 36, -32, AngleUnit.RADIANS, Math.PI);
+        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 36, 32, AngleUnit.RADIANS, Math.PI);
 
 
     }

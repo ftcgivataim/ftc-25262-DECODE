@@ -17,6 +17,8 @@ public class Conv {
     public Conv(HardwareMap hardwareMap) {
         convMotor = hardwareMap.get(DcMotorEx.class, "conv");
         convMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        convMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
     }
 
@@ -52,6 +54,12 @@ public class Conv {
                 initialized = true;
             }
 
+            if (convMotor.isOverCurrent()){
+                packet.put("OverCurrent CONV!!!", "FUCK");
+                convMotor.setPower(0);
+                return false;
+            }
+
             double vel = Math.abs(convMotor.getVelocity());
             packet.put("shooterVelocity", vel);
             return vel < 480.0;
@@ -74,8 +82,13 @@ public class Conv {
 
             telemetryPacket.put("Pushing back!", true);
             if (convMotor.getCurrentPosition() < convMotor.getTargetPosition() - 20) {
-                convMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 telemetryPacket.put("Pushed successfuly!", true);
+                return false;
+            }
+
+            if (convMotor.isOverCurrent()){
+                telemetryPacket.put("OverCurrent CONV!!!", "FUCK");
+                convMotor.setPower(0);
                 return false;
             }
 

@@ -35,10 +35,11 @@ public class Shooter {
     }
 
     private static double getVelTPS(Pose2D pose) {
-        // TODO implement this method
-        double dist = calcDist(pose);
-
-        return 900;
+        boolean isCloseToGoal = pose.getX(DistanceUnit.INCH) < 0;
+        if (isCloseToGoal)
+            return 900;
+        else
+            return 1050;
     }
 
 
@@ -65,6 +66,14 @@ public class Shooter {
             double velRight = right.getVelocity();
             packet.put("leftVel", velLeft);
             packet.put("rightVel", velRight);
+
+            if (right.isOverCurrent() || left.isOverCurrent()){
+                packet.put("OverCurrent!!!", "FUCK");
+                left.setPower(0);
+                right.setPower(0);
+                return false;
+            }
+
             return velLeft < velTPS || velRight < velTPS;
         }
 
