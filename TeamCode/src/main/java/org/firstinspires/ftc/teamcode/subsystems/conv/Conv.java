@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.InstantAction;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Conv {
@@ -25,7 +26,8 @@ public class Conv {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
-                convMotor.setPower(0.5);
+                convMotor.setDirection(DcMotor.Direction.REVERSE);
+                convMotor.setPower(0.3);
                 initialized = true;
             }
 
@@ -39,20 +41,45 @@ public class Conv {
         return new Load();
     }
 
+    public class UnLoad implements Action {
+        private boolean initialized = false;
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            if (!initialized) {
+                convMotor.setDirection(DcMotor.Direction.FORWARD);
+                convMotor.setPower(0.3);
+                initialized = true;
+            }
+
+            double vel = Math.abs(convMotor.getVelocity());
+            packet.put("shooterVelocity", vel);
+            return vel < 480.0;
+        }
+    }
+
+    public Action unLoad(){
+        return new UnLoad();
+    }
+
     public class PrepareToShoot implements Action {
         private boolean initialized = false;
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
             if (!initialized) {
-                convMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                convMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                convMotor.setPower(0);
-                convMotor.setTargetPosition(-100);
-                convMotor.setPower(0.1);
+                convMotor.setDirection(DcMotor.Direction.FORWARD);
+                convMotor.setPower(1);
                 initialized = true;
             }
 
-            return convMotor.isBusy();
+            telemetryPacket.put("Pushing back!", true);
+            if (convMotor.getCurrentPosition() < convMotor.getTargetPosition() - 20) {
+                convMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                telemetryPacket.put("Pushed successfuly!", true);
+                return false;
+            }
+
+            return false;
         }
     }
 

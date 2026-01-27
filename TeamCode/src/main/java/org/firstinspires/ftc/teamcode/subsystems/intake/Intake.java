@@ -27,6 +27,10 @@ public class Intake {
         return new InstantAction(() -> intakeMotor.setPower(1));
     }
 
+    public Action spinDown(){
+        return new InstantAction(() -> intakeMotor.setPower(-1));
+    }
+
 //    public class Stop implements Action {
 //
 //        @Override

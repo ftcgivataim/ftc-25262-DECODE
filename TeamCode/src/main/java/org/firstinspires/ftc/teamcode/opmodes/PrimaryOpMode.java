@@ -17,34 +17,41 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Helpers;
 import org.firstinspires.ftc.teamcode.sensors.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.subsystems.UnifiedActions;
 import org.firstinspires.ftc.teamcode.subsystems.conv.Conv;
 import org.firstinspires.ftc.teamcode.subsystems.intake.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 
 @Config
 @TeleOp(name = "PrimaryOpMode")
 public class PrimaryOpMode extends LinearOpMode {
 
-     private final FtcDashboard dash = FtcDashboard.getInstance();
-     private List<Action> runningActions = new ArrayList<>();
+    private final FtcDashboard dash = FtcDashboard.getInstance();
+    private List<Action> runningActions = new ArrayList<>();
 
     public static class Params {
-        public double speedMult = 1;
+        public double speedMult = 0.7;
         public double turnMult = 1;
 
         public double backMotorMult = 1;
         public double frontMotorMult = 1;
+
+        public double shooterSpeed = 900.0;
 
         public double kP = 1;
         public double kI = 0;
@@ -52,7 +59,7 @@ public class PrimaryOpMode extends LinearOpMode {
 
         public boolean isBlue = true;
 
-        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS,Math.toRadians(90));
+        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS, 0);
 
 
     }
@@ -69,6 +76,8 @@ public class PrimaryOpMode extends LinearOpMode {
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRight");
         DcMotor backRightMotor = hardwareMap.dcMotor.get("backRight");
 
+        DcMotorEx rightMotor = hardwareMap.get(DcMotorEx.class, "shooterRight");
+        DcMotorEx leftMotor = hardwareMap.get(DcMotorEx.class,"shooterLeft");
 
         // Reset the motor encoder so that it reads zero ticks
         frontLeftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -97,9 +106,17 @@ public class PrimaryOpMode extends LinearOpMode {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        //shooter motor directions
+        rightMotor.setDirection(DcMotor.Direction.FORWARD);
+        leftMotor.setDirection(DcMotor.Direction.REVERSE);
+
+        //stop shooter motors if they are not used
+        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
 
         // Retrieve the IMU from the hardware map
-        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class,"odo");
+        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
@@ -108,8 +125,6 @@ public class PrimaryOpMode extends LinearOpMode {
         odo.setPosition(PARAMS.startingPose);
         odo.update();
 
-        double prevAngle = odo.getPosition().getHeading(AngleUnit.RADIANS);;
-
         PIDController pid = new PIDController(PARAMS.kP, PARAMS.kI, PARAMS.kD);
         pid.setSetPoint(Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue));
 
@@ -117,9 +132,30 @@ public class PrimaryOpMode extends LinearOpMode {
         Intake intake = new Intake(hardwareMap);
         Shooter shooter = new Shooter(hardwareMap, odo.getPosition());
 
+        UnifiedActions unifiedActions = new UnifiedActions(conv, shooter, intake);
+
+
         boolean intakeMode = false;
 
         boolean goalLock = false;
+
+        double prevAngle = 0;
+
+        double speedRight;
+        double speedLeft;
+
+        int counter = 0;
+
+
+        // Declare all actions - for memory pointer reasons
+
+        Action shoot = unifiedActions.shoot();
+        Action stopShot = unifiedActions.stopShot();
+        Action load = unifiedActions.load();
+        Action unLoad = unifiedActions.unLoad();
+        Action stopLoad = unifiedActions.stopLoad();
+        Action spinUp = shooter.spinUp();
+
 
 
         waitForStart();
@@ -128,6 +164,7 @@ public class PrimaryOpMode extends LinearOpMode {
 
 
         while (opModeIsActive()) {
+            counter++;
 
             /* ##################################################
                             Inputs and Initializing
@@ -151,14 +188,17 @@ public class PrimaryOpMode extends LinearOpMode {
             odo.update();
             Pose2D pose = odo.getPosition();
 
-            double botHeading = unwrapAngle(prevAngle, pose.getHeading(AngleUnit.RADIANS))%(Math.PI*2); // Use unwrapping here
+            double goalAngle = Helpers.getAngleToBasket(pose, PARAMS.isBlue);
 
-            prevAngle = odo.getPosition().getHeading(AngleUnit.RADIANS);
 
-            telemetry.addData("botHeading", botHeading);
-            telemetry.addData("goalAngle:", Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue));
+            double botHeading = pose.getHeading(AngleUnit.RADIANS);
 
-            pid.setSetPoint(Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue));
+            if (botHeading < 0){
+                botHeading += 2*Math.PI;
+            }
+
+            double error = calcError(botHeading, goalAngle,telemetry); // Use unwrapping here
+
 
             double rotX = x * Math.cos(botHeading) - y * Math.sin(-botHeading);
             double rotY = x * Math.sin(-botHeading) + y * Math.cos(botHeading);
@@ -166,30 +206,68 @@ public class PrimaryOpMode extends LinearOpMode {
             rotX *= PARAMS.speedMult;
             rotY *= PARAMS.speedMult;
 
-            if (goalLock){
-                rx = pid.calculate(botHeading);
-            }
-            else
+            if (goalLock) {
+                rx = pid.calculate(0,error);
+            } else {
                 rx *= PARAMS.turnMult;
+            }
 
 
-
-            if (gamepad1.a) {
-                if(!intakeMode){
+            //intake
+            /*if (gamepad1.a) {
+                if (!intakeMode) {
                     runningActions.add(new ParallelAction(
                             intake.spinUp(),
                             conv.load()
                     ));
                     intakeMode = true;
-                }
-                else{
+                } else {
                     runningActions.add(new ParallelAction(
                             intake.stop(),
                             conv.stop()
                     ));
                     intakeMode = false;
                 }
+               }*/
+
+
+
+            if (gamepad1.left_trigger != 0) {
+                PARAMS.speedMult = 1;
             }
+            else if (gamepad1.left_bumper) {
+                PARAMS.speedMult = 0.5;
+            }
+            else {
+                PARAMS.speedMult = 0.7;
+            }
+
+            if (gamepad1.right_trigger != 0 && !runningActions.contains(shoot)){
+                runningActions.add(shoot);
+            }
+
+
+            if (gamepad1.y && !runningActions.contains(stopShot)){
+                runningActions.removeIf(action -> action.equals(shoot));
+                runningActions.add(stopShot);
+            }
+
+
+            //temporary
+            if(gamepad1.x && !runningActions.contains(unLoad)){
+                runningActions.add(unLoad);
+                intakeMode = true;
+            }
+            else if(gamepad1.a && !runningActions.contains(load)) {
+                runningActions.add(load);
+                intakeMode = true;
+            }
+            else if(intakeMode && !runningActions.contains(stopLoad)){
+                runningActions.add(stopLoad);
+                intakeMode = false;
+
+            }
+
 
 
             /* BINDINGS SO FAR - SHOW DRIVERS
@@ -206,16 +284,16 @@ public class PrimaryOpMode extends LinearOpMode {
                 ###################################################### */
 
 //           // update running actions
-           List<Action> newActions = new ArrayList<>();
+            List<Action> newActions = new ArrayList<>();
             for (Action action : runningActions) {
                 action.preview(packet.fieldOverlay());
                 if (action.run(packet)) {
                     newActions.add(action);
                 }
-           }
+            }
             runningActions = newActions;
 
-           dash.sendTelemetryPacket(packet);
+            dash.sendTelemetryPacket(packet);
 
             /* ##################################################
                      Applying the Calculations to the Motors
@@ -225,10 +303,10 @@ public class PrimaryOpMode extends LinearOpMode {
             // This ensures all the powers maintain the same ratio,
             // but only if at least one is out of the range [-1, 1]
             double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
-            double frontLeftPower = PARAMS.frontMotorMult *  (rotY + rotX + rx) / denominator;
-            double backLeftPower = PARAMS.backMotorMult *  (rotY - rotX + rx) / denominator;
-            double frontRightPower = PARAMS.frontMotorMult *  (rotY - rotX - rx) / denominator;
-            double backRightPower = PARAMS.backMotorMult *  (rotY + rotX - rx) / denominator;
+            double frontLeftPower = PARAMS.frontMotorMult * (rotY + rotX + rx) / denominator;
+            double backLeftPower = PARAMS.backMotorMult * (rotY - rotX + rx) / denominator;
+            double frontRightPower = PARAMS.frontMotorMult * (rotY - rotX - rx) / denominator;
+            double backRightPower = PARAMS.backMotorMult * (rotY + rotX - rx) / denominator;
 
             frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
@@ -241,26 +319,44 @@ public class PrimaryOpMode extends LinearOpMode {
                ################################################## */
 
 
+            telemetry.addData("Pose", odo.getPosition());
+            telemetry.addData("botHeading", Math.toDegrees(botHeading));
+            telemetry.addData("goalAngle", Math.toDegrees(Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue)));
+            telemetry.addData("prevAngle", Math.toDegrees(prevAngle));
+            telemetry.addData("error", error);
+            telemetry.addData("shooterSpeed", PARAMS.shooterSpeed);
+            telemetry.addData("rightSpeed", rightMotor.getVelocity());
+            telemetry.addData("leftSpeed", leftMotor.getVelocity());
+            telemetry.addData("counter", counter);
+            telemetry.addData("len:", runningActions.size());
+            telemetry.addData("intakeMode", intakeMode);
 
-            telemetry.addData("Pose:", odo.getPosition());
+
 
 
             telemetry.update();
 
-        }
+            prevAngle = botHeading;
 
+        }
 
 
     }
 
-    private double unwrapAngle(double previousAngle, double currentAngle) {
-        double delta = currentAngle - previousAngle;
-        if (delta > Math.PI) {
-            delta -= 2 * Math.PI;
-        } else if (delta < -Math.PI) {
-            delta += 2 * Math.PI;
+    private double calcError(double current, double target, Telemetry t) {
+        double eDistRight = (current - target) % (2 * Math.PI);
+        double eDistLeft = (target - current) % (2 * Math.PI);
+        if (eDistRight > eDistLeft) {
+            t.addData("left", eDistLeft);
+            return -eDistLeft;
         }
-        return previousAngle + delta;
+
+        t.addData("right", eDistRight);
+        return eDistRight;
+    }
+
+    private void prepareToShoot() {
+
     }
 
 }

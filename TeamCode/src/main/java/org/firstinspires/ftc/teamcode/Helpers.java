@@ -10,10 +10,19 @@ public class Helpers {
     public static final Pose2D GOAL_POSE_BLUE = new Pose2D(DistanceUnit.INCH, -72, -72, AngleUnit.RADIANS,0);
     public static final Pose2D GOAL_POSE_RED = new Pose2D(DistanceUnit.INCH, -72, 72, AngleUnit.RADIANS,0);
 
-    public static double getAngleToBasket(Pose2D pose, boolean isBlue)  {
+    public static double getAngleToBasket(Pose2D pose, boolean isBlue) {
         Pose2D goalPose = isBlue ? GOAL_POSE_BLUE : GOAL_POSE_RED;
-        return Math.atan2(goalPose.getX(DistanceUnit.INCH) - pose.getX(DistanceUnit.INCH), goalPose.getY(DistanceUnit.INCH) - pose.getY(DistanceUnit.INCH));
+
+        double angle = Math.atan2(
+                goalPose.getX(DistanceUnit.INCH) - pose.getX(DistanceUnit.INCH),
+                goalPose.getY(DistanceUnit.INCH) - pose.getY(DistanceUnit.INCH)
+        );
+        if (angle < 0){
+            return angle + 2*Math.PI;
+        }
+        return angle;
     }
+
 
     public static Pose2D pose2dToPose2D(Pose2d pose2d) {
         return new Pose2D(DistanceUnit.INCH, pose2d.component1().x, pose2d.component1().y, AngleUnit.RADIANS, pose2d.component2().real);

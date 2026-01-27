@@ -65,15 +65,48 @@ public class Shooter {
             double velRight = right.getVelocity();
             packet.put("leftVel", velLeft);
             packet.put("rightVel", velRight);
-            return velLeft != velTPS || velRight != velTPS;
+            return velLeft < 200 || velRight < 200;
         }
 
 
     }
 
+//    public class SpinUpSecondStage implements Action {
+//
+//        private final GoBildaPinpointDriver odo;
+//
+//        public SpinUpSecondStage(GoBildaPinpointDriver odo) {
+//            this.odo = odo;
+//        }
+//
+//
+//        @Override
+//        public boolean run(@NonNull TelemetryPacket packet) {
+//            odo.update();
+//            Pose2D pose = odo.getPosition();
+//            double velTPS = Shooter.getVelTPS(pose);
+//
+//            left.setVelocity(velTPS);
+//            right.setVelocity(velTPS);
+//
+//            double velLeft = left.getVelocity();
+//            double velRight = right.getVelocity();
+//            packet.put("leftVel", velLeft);
+//            packet.put("rightVel", velRight);
+//            return velLeft != velTPS && velRight != velTPS;
+//        }
+//
+//
+//    }
+
+
     public Action spinUp() {
         return new SpinUp(odo);
     }
+
+//    public Action spinUpSecondStage() {
+//        return new SpinUp(odo);
+//    }
 
     public class Stop implements Action {
 
