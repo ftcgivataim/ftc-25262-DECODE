@@ -66,10 +66,19 @@ public class PrimaryOpMode extends LinearOpMode {
 
     public static Params PARAMS = new Params();
 
+    public enum IntakeState {
+        STOPPED,
+        LOADING,
+        UNLOADING
+    }
+
+    // Create a variable to track the current state
+
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         TelemetryPacket packet = new TelemetryPacket();
+
 
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeft");
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeft");
@@ -135,27 +144,17 @@ public class PrimaryOpMode extends LinearOpMode {
         UnifiedActions unifiedActions = new UnifiedActions(conv, shooter, intake);
 
 
-        boolean intakeMode = false;
-
         boolean goalLock = false;
 
         double prevAngle = 0;
 
-        double speedRight;
-        double speedLeft;
-
         int counter = 0;
 
+        IntakeState currentIntakeState = IntakeState.STOPPED;
 
-        // Declare all actions - for memory pointer reasons
-
-        Action shoot = unifiedActions.shoot();
-        Action stopShot = unifiedActions.stopShot();
-        Action load = unifiedActions.load();
-        Action unLoad = unifiedActions.unLoad();
-        Action stopLoad = unifiedActions.stopLoad();
-        Action spinUp = shooter.spinUp();
-
+        Action activeIntakeAction = null;
+        // Track the active shooter action so we can check if it is running
+        Action activeShooterAction = null;
 
 
         waitForStart();
@@ -242,32 +241,91 @@ public class PrimaryOpMode extends LinearOpMode {
                 PARAMS.speedMult = 0.7;
             }
 
-            if (gamepad1.right_trigger != 0 && !runningActions.contains(shoot)){
-                runningActions.add(shoot);
+            /* ##################################################
+                           SHOOTER LOGIC
+               ################################################## */
+
+            // Check if Trigger is pressed
+            if (gamepad1.right_trigger > 0.1) {
+                // Check if we are ALREADY shooting.
+                // We do this by checking if our tracker variable is still in the running list.
+                boolean isAlreadyShooting = activeShooterAction != null && runningActions.contains(activeShooterAction);
+
+                if (!isAlreadyShooting) {
+                    // Create a FRESH action
+                    activeShooterAction = unifiedActions.shoot();
+                    runningActions.add(activeShooterAction);
+                }
+            }
+
+            // Check if Y is pressed (Emergency Stop / Reset)
+            if (gamepad1.y) {
+                // 1. Cancel the shooting action if it's currently running
+                if (activeShooterAction != null) {
+                    runningActions.remove(activeShooterAction);
+                    activeShooterAction = null; // clear the tracker
+                }
+
+                // 2. Add the stop command
+                // We don't need to track this one because it's usually instant
+                runningActions.add(unifiedActions.stopShot());
             }
 
 
-            if (gamepad1.y && !runningActions.contains(stopShot)){
-                runningActions.removeIf(action -> action.equals(shoot));
-                runningActions.add(stopShot);
+            /* ##################################################
+                           INTAKE CONTROL LOGIC
+               ################################################## */
+            boolean isPressingUnload = gamepad1.x;
+            boolean isPressingLoad   = gamepad1.a;
+
+            // 1. UNLOAD
+            if (isPressingUnload) {
+                if (currentIntakeState != IntakeState.UNLOADING) {
+                    // Stop previous action if it exists
+                    if (activeIntakeAction != null) {
+                        runningActions.remove(activeIntakeAction);
+                    }
+                    runningActions.add(unifiedActions.stopLoad()); // Safety stop
+
+                    // Create NEW action and store it
+                    activeIntakeAction = unifiedActions.unLoad();
+                    runningActions.add(activeIntakeAction);
+
+                    currentIntakeState = IntakeState.UNLOADING;
+                }
             }
 
+            // 2. LOAD
+            else if (isPressingLoad) {
+                if (currentIntakeState != IntakeState.LOADING) {
+                    if (activeIntakeAction != null) {
+                        runningActions.remove(activeIntakeAction);
+                    }
+                    runningActions.add(unifiedActions.stopLoad());
 
-            //temporary
-            if(gamepad1.x && !runningActions.contains(unLoad)){
-                runningActions.add(unLoad);
-                intakeMode = true;
-            }
-            else if(gamepad1.a && !runningActions.contains(load)) {
-                runningActions.add(load);
-                intakeMode = true;
-            }
-            else if(intakeMode && !runningActions.contains(stopLoad)){
-                runningActions.add(stopLoad);
-                intakeMode = false;
+                    // Create NEW action and store it
+                    activeIntakeAction = unifiedActions.load();
+                    runningActions.add(activeIntakeAction);
 
+                    currentIntakeState = IntakeState.LOADING;
+                }
             }
 
+            // 3. STOP
+            else {
+                if (currentIntakeState != IntakeState.STOPPED) {
+                    // Remove the specifically running action
+                    if (activeIntakeAction != null) {
+                        runningActions.remove(activeIntakeAction);
+                    }
+
+                    // Run the stop action
+                    runningActions.add(unifiedActions.stopLoad());
+
+                    currentIntakeState = IntakeState.STOPPED;
+                    activeIntakeAction = null;
+                }
+            }
 
 
             /* BINDINGS SO FAR - SHOW DRIVERS
@@ -329,7 +387,7 @@ public class PrimaryOpMode extends LinearOpMode {
             telemetry.addData("leftSpeed", leftMotor.getVelocity());
             telemetry.addData("counter", counter);
             telemetry.addData("len:", runningActions.size());
-            telemetry.addData("intakeMode", intakeMode);
+            telemetry.addData("intakeMode", currentIntakeState.toString());
 
 
 

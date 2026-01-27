@@ -22,10 +22,11 @@ public class UnifiedActions {
     }
 
     public Action shoot(){
-        return new SequentialAction(
+        return new SequentialAction( new ParallelAction(
                 conv.prepareToShoot(),
-                shooter.spinUp(),
-                new ParallelAction(conv.load(), shooter.spinUp())
+                shooter.spinUp()
+                                    ),
+                conv.load()
         );
     }
 

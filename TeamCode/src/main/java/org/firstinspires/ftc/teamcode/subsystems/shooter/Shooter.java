@@ -65,7 +65,7 @@ public class Shooter {
             double velRight = right.getVelocity();
             packet.put("leftVel", velLeft);
             packet.put("rightVel", velRight);
-            return velLeft < 200 || velRight < 200;
+            return velLeft < velTPS || velRight < velTPS;
         }
 
 

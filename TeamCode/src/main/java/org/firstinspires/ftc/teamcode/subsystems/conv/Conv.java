@@ -27,7 +27,7 @@ public class Conv {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.REVERSE);
-                convMotor.setPower(0.3);
+                convMotor.setPower(0.5);
                 initialized = true;
             }
 
@@ -48,7 +48,7 @@ public class Conv {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.FORWARD);
-                convMotor.setPower(0.3);
+                convMotor.setPower(0.5);
                 initialized = true;
             }
 
