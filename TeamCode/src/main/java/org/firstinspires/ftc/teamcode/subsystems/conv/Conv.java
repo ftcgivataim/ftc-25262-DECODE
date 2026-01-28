@@ -50,7 +50,7 @@ public class Conv {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.FORWARD);
-                convMotor.setPower(0.5);
+                convMotor.setPower(1);
                 initialized = true;
             }
 

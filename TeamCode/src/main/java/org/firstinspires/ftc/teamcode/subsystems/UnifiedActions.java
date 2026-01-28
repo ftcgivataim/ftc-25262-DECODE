@@ -41,10 +41,7 @@ public class UnifiedActions {
         );
     }
     public Action unLoad(){
-        return new ParallelAction(
-                intake.spinDown(),
-                conv.unLoad()
-        );
+        return conv.unLoad();
     }
 
     public Action stopLoad(){

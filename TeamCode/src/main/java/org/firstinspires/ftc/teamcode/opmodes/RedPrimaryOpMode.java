@@ -42,7 +42,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
         public double backMotorMult = 1;
         public double frontMotorMult = 1;
 
-        public double shooterSpeed = 900.0;
+        public double shooterSpeed = 1000.0;
 
         public double kP = 1;
         public double kI = 0;
