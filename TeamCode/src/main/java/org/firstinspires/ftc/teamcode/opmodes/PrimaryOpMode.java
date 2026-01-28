@@ -284,7 +284,7 @@ public class PrimaryOpMode extends LinearOpMode {
                     runningActions.add(unifiedActions.stopLoad()); // Safety stop
 
                     // Create NEW action and store it
-                    activeIntakeAction = unifiedActions.unLoad();
+                    activeIntakeAction = conv.unLoad();
                     runningActions.add(activeIntakeAction);
 
                     currentIntakeState = IntakeState.UNLOADING;

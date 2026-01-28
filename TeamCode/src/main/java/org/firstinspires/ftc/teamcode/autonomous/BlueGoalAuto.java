@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.subsystems.drivetrain.MecanumDrive;
 
 @Config
-@Autonomous(name = "Blue Auto")
+@Autonomous()
 public class BlueGoalAuto extends LinearOpMode {
 
     @Override

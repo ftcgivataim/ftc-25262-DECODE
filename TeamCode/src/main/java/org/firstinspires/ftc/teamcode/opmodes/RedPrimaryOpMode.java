@@ -52,6 +52,9 @@ public class RedPrimaryOpMode extends LinearOpMode {
 
         public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 36, 32, AngleUnit.RADIANS, Math.PI);
 
+        public Pose2D resetPose = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS, Math.PI);
+
+
 
     }
 
@@ -275,7 +278,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
                     runningActions.add(unifiedActions.stopLoad()); // Safety stop
 
                     // Create NEW action and store it
-                    activeIntakeAction = unifiedActions.unLoad();
+                    activeIntakeAction = conv.unLoad();
                     runningActions.add(activeIntakeAction);
 
                     currentIntakeState = IntakeState.UNLOADING;
@@ -316,6 +319,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
 
             if (gamepad1.dpad_up){
                 odo.resetPosAndIMU();
+                odo.setPosition(PARAMS.resetPose);
             }
 
             /* BINDINGS SO FAR - SHOW DRIVERS
