@@ -35,11 +35,7 @@ public class Shooter {
     }
 
     private static double getVelTPS(Pose2D pose) {
-        boolean isCloseToGoal = pose.getX(DistanceUnit.INCH) < 0;
-        if (isCloseToGoal)
-            return 900;
-        else
-            return 1050;
+        return 700;
     }
 
 
