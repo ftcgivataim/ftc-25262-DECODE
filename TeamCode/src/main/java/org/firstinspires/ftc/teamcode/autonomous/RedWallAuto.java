@@ -24,7 +24,7 @@ public class RedWallAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(63, -9, Math.toRadians(180));
+        Pose2d initialPose = new Pose2d(63, -9, Math.toRadians(0));
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
@@ -53,7 +53,9 @@ public class RedWallAuto extends LinearOpMode {
 
         Action tot = new SequentialAction(
                 tab1.build(),
-                conv.prepareToShoot(),
+                conv.unLoad(),
+                tab1.fresh().waitSeconds(0.5).build(),
+                conv.stop(),
                 unifiedActions.shoot(),
                 unifiedActions.stopShot(),
                 tab2.build(),
