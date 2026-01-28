@@ -29,7 +29,7 @@ public class RedWallAuto extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
         GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
-
+        odo.resetPosAndIMU();
 
         Conv conv = new Conv(hardwareMap);
         Intake intake = new Intake(hardwareMap);

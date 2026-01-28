@@ -34,7 +34,8 @@ public class LearningAuto extends LinearOpMode {
                 .strafeTo(new Vector2d(20, 0))
                 .strafeTo(new Vector2d(0, 20))
                 .strafeTo(new Vector2d(-20, 0))
-                .strafeTo(new Vector2d(0, -20));
+                .strafeTo(new Vector2d(0, -20))
+                .waitSeconds(2);
 
         Action tab1Action = tab1.build();
 

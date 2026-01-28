@@ -30,7 +30,6 @@ public class BlueWallAuto extends LinearOpMode {
 
         GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
-
         Conv conv = new Conv(hardwareMap);
         Intake intake = new Intake(hardwareMap);
         Shooter shooter = new Shooter(hardwareMap, odo.getPosition());

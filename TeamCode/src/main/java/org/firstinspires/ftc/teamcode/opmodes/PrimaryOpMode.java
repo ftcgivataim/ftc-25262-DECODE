@@ -60,7 +60,7 @@ public class PrimaryOpMode extends LinearOpMode {
         public boolean isBlue = true;
 
         public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 36, -32, AngleUnit.RADIANS, Math.PI);
-
+        public Pose2D resetPose = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS, Math.PI);
 
     }
 
@@ -325,6 +325,7 @@ public class PrimaryOpMode extends LinearOpMode {
 
             if (gamepad1.dpad_up){
                 odo.resetPosAndIMU();
+                odo.setPosition(PARAMS.resetPose);
             }
 
             /* BINDINGS SO FAR - SHOW DRIVERS
