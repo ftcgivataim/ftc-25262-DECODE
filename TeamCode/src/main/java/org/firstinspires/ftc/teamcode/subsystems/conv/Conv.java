@@ -83,6 +83,7 @@ public class Conv {
             telemetryPacket.put("Pushing back!", true);
             if (convMotor.getCurrentPosition() < convMotor.getTargetPosition() - 20) {
                 telemetryPacket.put("Pushed successfuly!", true);
+                convMotor.setPower(0);
                 return false;
             }
 
