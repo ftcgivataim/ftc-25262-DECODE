@@ -11,6 +11,7 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.Helpers;
 import org.firstinspires.ftc.teamcode.sensors.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.subsystems.UnifiedActions;
 import org.firstinspires.ftc.teamcode.subsystems.conv.Conv;
@@ -28,33 +29,33 @@ public class BlueWallAuto extends LinearOpMode {
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
-        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+//        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
         Conv conv = new Conv(hardwareMap);
         Intake intake = new Intake(hardwareMap);
-        Shooter shooter = new Shooter(hardwareMap, odo.getPosition());
+        Shooter shooter = new Shooter(hardwareMap, Helpers.GOAL_POSE_BLUE);
 
         UnifiedActions unifiedActions = new UnifiedActions(conv, shooter, intake);
 
         VelConstraint baseVelConstraint = (robotPose, _path, _disp) -> 10.0;
 
 
+        double goalHeading = Math.atan2(-72 + 18, 18 - 72) + Math.PI;
         TrajectoryActionBuilder tab1 = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(new Vector2d(-18,-18), Math.atan2(-72+18,18-72));
+                .strafeToLinearHeading(new Vector2d(-18,-18), goalHeading);
         TrajectoryActionBuilder tab2 = tab1.fresh().
                 strafeToLinearHeading(new Vector2d(36,-24), Math.PI*3/2);
         TrajectoryActionBuilder tab3 = tab2.fresh().
                 strafeTo(new Vector2d(36,-56), baseVelConstraint);
         TrajectoryActionBuilder tab4 = tab3.fresh()
                 .strafeToLinearHeading(new Vector2d(36,-24), Math.PI*3/2)
-                .strafeToLinearHeading(new Vector2d(-18,-18), Math.atan2(-72+18,18-72));
+                .strafeToLinearHeading(new Vector2d(-18,-18), goalHeading);
         TrajectoryActionBuilder tabClose = tab4.fresh().
-                strafeToLinearHeading(new Vector2d(36,-32), Math.PI);
+                strafeToLinearHeading(new Vector2d(36,-32), 0);
 
         Action tot = new SequentialAction(
                 tab1.build(),
-                conv.unLoad(),
-                tab1.fresh().waitSeconds(0.5).build(),
+                unifiedActions.unLoad(),
                 conv.stop(),
                 unifiedActions.shoot(),
                 unifiedActions.stopShot(),

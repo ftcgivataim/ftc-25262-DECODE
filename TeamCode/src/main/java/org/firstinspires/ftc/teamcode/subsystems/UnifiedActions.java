@@ -4,6 +4,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 
 import org.firstinspires.ftc.teamcode.subsystems.conv.Conv;
 import org.firstinspires.ftc.teamcode.subsystems.intake.Intake;
@@ -24,7 +25,8 @@ public class UnifiedActions {
     public Action shoot(){
         return new SequentialAction(
                 shooter.spinUp(),
-                conv.load()
+                conv.load(),
+                new SleepAction(5.0)
         );
     }
 
@@ -41,7 +43,10 @@ public class UnifiedActions {
         );
     }
     public Action unLoad(){
-        return conv.unLoad();
+        return new SequentialAction(
+                conv.unLoad(),
+                new SleepAction(0.5)
+                );
     }
 
     public Action stopLoad(){

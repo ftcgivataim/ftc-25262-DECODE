@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -14,7 +15,7 @@ import org.firstinspires.ftc.teamcode.sensors.GoBildaPinpointDriver;
 public class Shooter {
     private final DcMotorEx right;
     private final DcMotorEx left;
-    private final GoBildaPinpointDriver odo;
+//    private final GoBildaPinpointDriver odo;
 
     private final Pose2D goalPose;
 
@@ -22,7 +23,9 @@ public class Shooter {
         right = hardwareMap.get(DcMotorEx.class, "shooterRight");
         left = hardwareMap.get(DcMotorEx.class, "shooterLeft");
 
-        odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+        right.setDirection(DcMotor.Direction.FORWARD);
+        left.setDirection(DcMotor.Direction.REVERSE);
+//        odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
         this.goalPose = goalPose;
 
@@ -35,28 +38,27 @@ public class Shooter {
     }
 
     private static double getVelTPS(Pose2D pose) {
-        return 700;
+        return 900;
     }
 
 
 
     public class SpinUp implements Action {
-
-        private final GoBildaPinpointDriver odo;
-
-        public SpinUp(GoBildaPinpointDriver odo) {
-            this.odo = odo;
-        }
+        double velTPS = 900;
+        boolean initialized = false;
 
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            odo.update();
-            Pose2D pose = odo.getPosition();
-            double velTPS = Shooter.getVelTPS(pose);
+//            odo.update();
+//            Pose2D pose = odo.getPosition();
+//            double velTPS = Shooter.getVelTPS(pose);
 
-            left.setVelocity(velTPS);
-            right.setVelocity(velTPS);
+            if (!initialized) {
+                right.setVelocity(velTPS);
+                left.setVelocity(velTPS);
+                initialized = true;
+            }
 
             double velLeft = left.getVelocity();
             double velRight = right.getVelocity();
@@ -106,7 +108,7 @@ public class Shooter {
 
 
     public Action spinUp() {
-        return new SpinUp(odo);
+        return new SpinUp();
     }
 
 //    public Action spinUpSecondStage() {

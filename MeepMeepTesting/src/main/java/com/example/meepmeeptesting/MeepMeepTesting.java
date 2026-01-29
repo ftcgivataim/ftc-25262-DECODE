@@ -20,17 +20,17 @@ public class MeepMeepTesting {
 
         VelConstraint baseVelConstraint = (robotPose, _path, _disp) -> 10.0;
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(63, -9, Math.toRadians(180)))
-                .strafeToLinearHeading(new Vector2d(-18,-18), Math.atan2(-72+18,18-72))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(63, -9, Math.toRadians(0)))
+                .strafeToLinearHeading(new Vector2d(-18,-18), Math.atan2(-72+18,18-72)+Math.PI)
                 .waitSeconds(1)
-                .strafeToLinearHeading(new Vector2d(36,-24), Math.PI*1/2)
+                .strafeToLinearHeading(new Vector2d(36,-24), Math.PI*3/2)
                 .waitSeconds(1)
                 .strafeTo(new Vector2d(36,-56),baseVelConstraint)
                 .waitSeconds(1)
-                .strafeToLinearHeading(new Vector2d(36,-24), Math.PI*1/2)
-                .strafeToLinearHeading(new Vector2d(-18,-18), Math.atan2(-72+18,18-72))
+                .strafeToLinearHeading(new Vector2d(36,-24), Math.PI*3/2)
+                .strafeToLinearHeading(new Vector2d(-18,-18), Math.atan2(-72+18,18-72)+Math.PI)
                 .waitSeconds(1)
-                        .strafeToLinearHeading(new Vector2d(36,-32),Math.PI)
+                        .strafeToLinearHeading(new Vector2d(36,-32),0)
                 .build());
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_JUICE_DARK)
