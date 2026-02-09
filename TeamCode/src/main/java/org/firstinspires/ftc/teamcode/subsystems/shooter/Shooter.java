@@ -4,9 +4,11 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -23,8 +25,17 @@ public class Shooter {
         right = hardwareMap.get(DcMotorEx.class, "shooterRight");
         left = hardwareMap.get(DcMotorEx.class, "shooterLeft");
 
-        right.setDirection(DcMotor.Direction.FORWARD);
-        left.setDirection(DcMotor.Direction.REVERSE);
+        right.setDirection(DcMotorEx.Direction.FORWARD);
+        left.setDirection(DcMotorEx.Direction.REVERSE);
+
+        left.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        right.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
+        PIDFCoefficients coefficients = new PIDFCoefficients(50.0,0.0,5.0,16.0);
+
+        right.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,coefficients);
+        left.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,coefficients);
+
 //        odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
         this.goalPose = goalPose;
@@ -115,29 +126,31 @@ public class Shooter {
 //        return new SpinUp(odo);
 //    }
 
-    public class Stop implements Action {
+//    public class Stop implements Action {
+//
+//        private boolean initialized = false;
+//
+//        @Override
+//        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//            if (!initialized) {
+//                right.setPower(0);
+//                left.setPower(0);
+//                initialized = true;
+//            }
+//
+//
+//            double velLeft = left.getVelocity();
+//            double velRight = right.getVelocity();
+//            telemetryPacket.put("leftVel", velLeft);
+//            telemetryPacket.put("rightVel", velRight);
+//            return velLeft != 0 || velRight != 0;
+//        }
+//    }
 
-        private boolean initialized = false;
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            if (!initialized) {
-                right.setPower(0);
-                left.setPower(0);
-                initialized = true;
-            }
-
-
-            double velLeft = left.getVelocity();
-            double velRight = right.getVelocity();
-            telemetryPacket.put("leftVel", velLeft);
-            telemetryPacket.put("rightVel", velRight);
-            return velLeft != 0 || velRight != 0;
-        }
-    }
 
     public Action stop() {
-        return new Stop();
+        return new InstantAction(() -> {right.setPower(0);left.setPower(0);});
     }
+
 
 }

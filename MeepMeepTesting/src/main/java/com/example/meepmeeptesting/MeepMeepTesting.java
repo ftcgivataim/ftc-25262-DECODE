@@ -20,7 +20,7 @@ public class MeepMeepTesting {
 
         VelConstraint baseVelConstraint = (robotPose, _path, _disp) -> 10.0;
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(63, -9, Math.toRadians(0)))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(63, 9, Math.toRadians(0)))
                 .strafeToLinearHeading(new Vector2d(-18,-18), Math.atan2(-72+18,18-72)+Math.PI)
                 .waitSeconds(1)
                 .strafeToLinearHeading(new Vector2d(36,-24), Math.PI*3/2)

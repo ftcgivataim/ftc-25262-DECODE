@@ -42,10 +42,10 @@ public class UnifiedActions {
                 conv.load()
         );
     }
-    public Action unLoad(){
+    public Action unLoad(double x){
         return new SequentialAction(
                 conv.unLoad(),
-                new SleepAction(0.5)
+                new SleepAction(x)
                 );
     }
 

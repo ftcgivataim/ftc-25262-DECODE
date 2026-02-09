@@ -192,7 +192,7 @@ public class PrimaryOpMode extends LinearOpMode {
                 botHeading += 2*Math.PI;
             }
 
-            double error = calcError(botHeading, goalAngle,telemetry); // Use unwrapping here
+            double error = calcError(botHeading+Math.PI, goalAngle,telemetry); // Use unwrapping here
 
 
             double rotX = x * Math.cos(botHeading) - y * Math.sin(-botHeading);
@@ -202,29 +202,13 @@ public class PrimaryOpMode extends LinearOpMode {
             rotY *= PARAMS.speedMult;
 
             if (goalLock) {
-                rx = pid.calculate(0,error);
+                if (Math.abs(error) >= 0.07)
+                    rx = -pid.calculate(0,error);
+                else
+                    rx = 0;
             } else {
                 rx *= PARAMS.turnMult;
             }
-
-
-            //intake
-            /*if (gamepad1.a) {
-                if (!intakeMode) {
-                    runningActions.add(new ParallelAction(
-                            intake.spinUp(),
-                            conv.load()
-                    ));
-                    intakeMode = true;
-                } else {
-                    runningActions.add(new ParallelAction(
-                            intake.stop(),
-                            conv.stop()
-                    ));
-                    intakeMode = false;
-                }
-               }*/
-
 
 
             if (gamepad1.left_trigger != 0) {
@@ -381,7 +365,6 @@ public class PrimaryOpMode extends LinearOpMode {
             telemetry.addData("botHeading", Math.toDegrees(botHeading));
             telemetry.addData("goalAngle", Math.toDegrees(Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue)));
             telemetry.addData("prevAngle", Math.toDegrees(prevAngle));
-            telemetry.addData("error", error);
             telemetry.addData("shooterSpeed", PARAMS.shooterSpeed);
             telemetry.addData("rightSpeed", rightMotor.getVelocity());
             telemetry.addData("leftSpeed", leftMotor.getVelocity());
@@ -401,19 +384,24 @@ public class PrimaryOpMode extends LinearOpMode {
     }
 
     private double calcError(double current, double target, Telemetry t) {
-        double eDistRight = (current - target) % (2 * Math.PI);
-        double eDistLeft = (target - current) % (2 * Math.PI);
-        if (eDistRight > eDistLeft) {
-            t.addData("left", eDistLeft);
-            return -eDistLeft;
+        // 1. Calculate the raw difference
+        double error = target - current;
+
+        // 2. Normalize the error to be between -PI and +PI
+        while (error > Math.PI) {
+            error -= 2 * Math.PI;
+        }
+        while (error < -Math.PI) {
+            error += 2 * Math.PI;
         }
 
-        t.addData("right", eDistRight);
-        return eDistRight;
+        // Telemetry for debugging
+        t.addData("Raw Target", target);
+        t.addData("error Heading", current);
+        t.addData("Calculated Error", error);
+
+        return error;
     }
 
-    private void prepareToShoot() {
-
-    }
 
 }

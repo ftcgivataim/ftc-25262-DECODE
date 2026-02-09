@@ -9,15 +9,22 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 @Config
 @TeleOp(name = "protShooter")
 public class ProtShooter extends OpMode {
 
+    public static double kP = 50;
+    public static double kD = 5;
+    public static double kI = 0;
+    public static double kF = 16;
+
     public static double A_POWER = 0.5; //checked for shooting far.
     public static double X_POWER = 900.0; //in ticks per second
     public static double B_POWER = 1.0;
     public static double Y_POWER = 0.2;
+
     public static boolean inverseRight = false;
     public static boolean inverseLeft = true;
     public static boolean inverseConv = true;
@@ -63,8 +70,15 @@ public class ProtShooter extends OpMode {
         sweeperMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         convMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
+        PIDFCoefficients coefficients = new PIDFCoefficients(kP, kI, kD, kF);
+        rightMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
+        leftMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, coefficients);
+
+
+        telemetry.addData("coef",rightMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+
 //        telemetry.speak("It's a me, Mario! Here we go!");
-//        telemetry.update();
+        telemetry.update();
     }
 
     @Override
@@ -120,6 +134,7 @@ public class ProtShooter extends OpMode {
         telemetry.addData("Left RPM",leftRPM);
         telemetry.addData("Right RPM",rightRPM);
 
+        telemetry.addData("coef",rightMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
 
         telemetry.update();
     }

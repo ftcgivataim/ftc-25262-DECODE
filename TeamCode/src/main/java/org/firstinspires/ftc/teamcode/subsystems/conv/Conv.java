@@ -35,6 +35,12 @@ public class Conv {
 
             double vel = convMotor.getVelocity();
             packet.put("shooterVelocity", vel);
+
+            if (convMotor.isOverCurrent()){
+                packet.put("OverCurrent stop", "Fine");
+                return false;
+            }
+
             return vel < 480.0;
         }
     }
