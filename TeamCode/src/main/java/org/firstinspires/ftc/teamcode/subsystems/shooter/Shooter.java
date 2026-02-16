@@ -55,7 +55,7 @@ public class Shooter {
 
 
     public class SpinUp implements Action {
-        double velTPS = 900;
+        double velTPS = 810;
         boolean initialized = false;
 
 

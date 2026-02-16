@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.subsystems.intake;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.InstantAction;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Intake {
@@ -11,7 +12,7 @@ public class Intake {
 
     public Intake(HardwareMap hardwareMap) {
         intakeMotor = hardwareMap.get(DcMotorEx.class, "sweeper");
-        intakeMotor.setDirection(DcMotorEx.Direction.REVERSE);
+        intakeMotor.setDirection(DcMotorEx.Direction.FORWARD);
     }
 
 //    public class SpinUp implements Action {

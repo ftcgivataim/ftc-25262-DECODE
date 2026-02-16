@@ -14,6 +14,7 @@ public class Conv {
 
     private final DcMotorEx convMotor;
 
+
     public Conv(HardwareMap hardwareMap) {
         convMotor = hardwareMap.get(DcMotorEx.class, "conv");
         convMotor.setDirection(DcMotorEx.Direction.REVERSE);
@@ -29,7 +30,7 @@ public class Conv {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.REVERSE);
-                convMotor.setPower(0.5);
+                convMotor.setPower(1);
                 initialized = true;
             }
 
@@ -57,7 +58,7 @@ public class Conv {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.FORWARD);
-                convMotor.setPower(1);
+                convMotor.setVelocity(900);
                 initialized = true;
             }
 
@@ -69,7 +70,7 @@ public class Conv {
 
             double vel = Math.abs(convMotor.getVelocity());
             packet.put("shooterVelocity", vel);
-            return vel < 480.0;
+            return vel < 480;
         }
     }
 
@@ -110,5 +111,9 @@ public class Conv {
 
     public Action stop(){
         return new InstantAction(() -> convMotor.setPower(0));
+    }
+
+    public double getVelocity(){
+        return convMotor.getVelocity();
     }
 }

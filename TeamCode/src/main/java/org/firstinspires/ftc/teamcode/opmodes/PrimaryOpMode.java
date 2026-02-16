@@ -165,11 +165,11 @@ public class PrimaryOpMode extends LinearOpMode {
                             Inputs and Initializing
                ################################################## */
 
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+            double y = -gamepad2.left_stick_y; // Remember, Y stick value is reversed
+            double x = gamepad2.left_stick_x;
+            double rx = gamepad2.right_stick_x;
 
-            goalLock = gamepad1.b ^ goalLock;
+            goalLock = gamepad2.b ^ goalLock;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
@@ -211,10 +211,10 @@ public class PrimaryOpMode extends LinearOpMode {
             }
 
 
-            if (gamepad1.left_trigger != 0) {
+            if (gamepad2.left_trigger != 0) {
                 PARAMS.speedMult = 1;
             }
-            else if (gamepad1.left_bumper) {
+            else if (gamepad2.left_bumper) {
                 PARAMS.speedMult = 0.5;
             }
             else {
@@ -307,7 +307,7 @@ public class PrimaryOpMode extends LinearOpMode {
                 }
             }
 
-            if (gamepad1.dpad_up){
+            if (gamepad2.dpad_up){
                 odo.resetPosAndIMU();
                 odo.setPosition(PARAMS.resetPose);
             }
