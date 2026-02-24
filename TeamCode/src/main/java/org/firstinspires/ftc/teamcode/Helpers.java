@@ -24,13 +24,18 @@ public class Helpers {
     }
 
 
-    public static Pose2D pose2dToPose2D(Pose2d pose2d) {
-        return new Pose2D(DistanceUnit.INCH, pose2d.component1().x, pose2d.component1().y, AngleUnit.RADIANS, pose2d.component2().real);
-
-        }
-
 
     public static Pose2d pose2DToPose2d(Pose2D pose2D){
         return new Pose2d(pose2D.getX(DistanceUnit.INCH), pose2D.getY(DistanceUnit.INCH), pose2D.getHeading(AngleUnit.RADIANS));
+    }
+
+    public static Pose2D rrToSdk(Pose2d rrPose) {
+        return new Pose2D(
+                DistanceUnit.INCH,
+                rrPose.position.x,
+                rrPose.position.y,
+                AngleUnit.RADIANS,
+                rrPose.heading.toDouble() // Use .toDouble() for RR 1.0
+        );
     }
 }

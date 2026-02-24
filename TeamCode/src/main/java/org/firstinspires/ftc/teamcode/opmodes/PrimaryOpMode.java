@@ -25,6 +25,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Helpers;
+import org.firstinspires.ftc.teamcode.Stats;
 import org.firstinspires.ftc.teamcode.sensors.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.subsystems.UnifiedActions;
 import org.firstinspires.ftc.teamcode.subsystems.conv.Conv;
@@ -59,7 +60,7 @@ public class PrimaryOpMode extends LinearOpMode {
 
         public boolean isBlue = true;
 
-        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 36, -32, AngleUnit.RADIANS, Math.PI);
+//        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 36, -32, AngleUnit.RADIANS, Math.PI);
         public Pose2D resetPose = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS, Math.PI);
 
     }
@@ -79,6 +80,7 @@ public class PrimaryOpMode extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         TelemetryPacket packet = new TelemetryPacket();
 
+        Pose2D startingPose = Helpers.rrToSdk(Stats.currentPose);
 
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeft");
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeft");
@@ -131,7 +133,7 @@ public class PrimaryOpMode extends LinearOpMode {
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
         odo.resetPosAndIMU();
-        odo.setPosition(PARAMS.startingPose);
+        odo.setPosition(startingPose);
         odo.update();
 
         PIDController pid = new PIDController(PARAMS.kP, PARAMS.kI, PARAMS.kD);
@@ -268,7 +270,7 @@ public class PrimaryOpMode extends LinearOpMode {
                     runningActions.add(unifiedActions.stopLoad()); // Safety stop
 
                     // Create NEW action and store it
-                    activeIntakeAction = conv.unLoad();
+                    activeIntakeAction = new ParallelAction(conv.unLoad(), unifiedActions.UnLoadShooter(0.1));
                     runningActions.add(activeIntakeAction);
 
                     currentIntakeState = IntakeState.UNLOADING;
@@ -297,6 +299,7 @@ public class PrimaryOpMode extends LinearOpMode {
                     // Remove the specifically running action
                     if (activeIntakeAction != null) {
                         runningActions.remove(activeIntakeAction);
+                        runningActions.add(shooter.stop());
                     }
 
                     // Run the stop action

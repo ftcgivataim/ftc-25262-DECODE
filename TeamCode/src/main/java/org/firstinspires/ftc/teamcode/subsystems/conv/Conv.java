@@ -30,7 +30,7 @@ public class Conv {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.REVERSE);
-                convMotor.setPower(1);
+                convMotor.setPower(0.1);
                 initialized = true;
             }
 
@@ -42,7 +42,7 @@ public class Conv {
                 return false;
             }
 
-            return vel < 480.0;
+            return false;
         }
     }
 
@@ -58,7 +58,7 @@ public class Conv {
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.FORWARD);
-                convMotor.setVelocity(900);
+                convMotor.setPower(1);
                 initialized = true;
             }
 
@@ -68,9 +68,9 @@ public class Conv {
                 return false;
             }
 
-            double vel = Math.abs(convMotor.getVelocity());
+            double vel = convMotor.getVelocity();
             packet.put("shooterVelocity", vel);
-            return vel < 480;
+            return false;
         }
     }
 
@@ -84,7 +84,7 @@ public class Conv {
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.FORWARD);
-                convMotor.setPower(1);
+                convMotor.setPower(0.3);
                 initialized = true;
             }
 

@@ -55,7 +55,7 @@ public class Shooter {
 
 
     public class SpinUp implements Action {
-        double velTPS = 810;
+        double velTPS = 790;
         boolean initialized = false;
 
 
@@ -83,7 +83,7 @@ public class Shooter {
                 return false;
             }
 
-            return velLeft < velTPS || velRight < velTPS;
+            return velLeft < 770 || velRight < 770;
         }
 
 
@@ -152,5 +152,9 @@ public class Shooter {
         return new InstantAction(() -> {right.setPower(0);left.setPower(0);});
     }
 
+    public Action unloadShooter(){
+        return new InstantAction(() -> { right.setPower(-1);left.setPower(-1);});}
+    }
 
-}
+
+

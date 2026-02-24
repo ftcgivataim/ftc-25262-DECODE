@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Helpers;
+import org.firstinspires.ftc.teamcode.Stats;
 import org.firstinspires.ftc.teamcode.subsystems.UnifiedActions;
 import org.firstinspires.ftc.teamcode.subsystems.conv.Conv;
 import org.firstinspires.ftc.teamcode.subsystems.drivetrain.MecanumDrive;
@@ -52,10 +53,10 @@ public class BlueBasketAuto extends LinearOpMode {
                 .strafeToLinearHeading(shootingPose, goalHeading);
 
         TrajectoryActionBuilder driveToCollect = driveToShootingPose.fresh().
-                strafeToLinearHeading(new Vector2d(24,-40), Math.PI*3/2 - 0.13);
+                strafeToLinearHeading(new Vector2d(-12,-40), Math.PI*3/2 - 0.13);
 
         TrajectoryActionBuilder  driveToSample2 = driveToCollect.fresh().
-                strafeTo(new Vector2d(24,-72), baseVelConstraint);
+                strafeTo(new Vector2d(-12,-60), baseVelConstraint);
 
         TrajectoryActionBuilder  driveToScore =  driveToSample2.fresh()
                 .strafeToLinearHeading(new Vector2d(24,-44), Math.PI*3/2)
@@ -68,51 +69,56 @@ public class BlueBasketAuto extends LinearOpMode {
 
 
 
-//        Action prepareShotAndMove = new ParallelAction(
-//                unifiedActions.stopShot(),
-//                driveToShootingPose.build(), // Renamed from tab2
-//                unifiedActions.load()
-//        );
-//
-//        Action spinUpAndMoveToScore = new ParallelAction(
-//                driveToScore.build(), // Renamed from tab4
-//                shooter.spinUp(),     // Ideally move this into unifiedActions too
-//                unifiedActions.unLoad(UNLOAD_TIME_LONG)
-//        );
-//
-////// 3. Define Logical Phases
-//        Action scorePreload = new SequentialAction(
-//                driveToSubmersible.build(), // Renamed from tab1
-//                unifiedActions.unLoad(UNLOAD_TIME_SHORT),
-//                conv.stop(),
-//                unifiedActions.shoot()
-//        );
-//
-//        Action scoreSample1 = new SequentialAction(
-//                driveToSample2.build(), // Renamed from tab3
-//                unifiedActions.stopLoad(),
-//                spinUpAndMoveToScore,
-//                conv.stop(),
-//                unifiedActions.shoot(),
-//                unifiedActions.stopShot()
-//        );
-//
-//        Action park = driveToSubmersible.build();
-//
-////// 4. The Final Sequence is now readable like English
-//        Action fullAutoRoutine = new SequentialAction(
-//                scorePreload,
-//                prepareShotAndMove,
-//                scoreSample1,
-//                park
-//        );
-//
-//        waitForStart();
-//
-//        if (isStopRequested()) return;
-//
-//        Actions.runBlocking(fullAutoRoutine);
-//
+        Action prepareShotAndMove = new ParallelAction(
+                unifiedActions.stopShot(),
+                driveToCollect.build(), // Renamed from tab2
+                unifiedActions.load(),
+                unifiedActions.UnLoadShooter(0.5)
+        );
+
+        Action spinUpAndMoveToScore = new ParallelAction(
+                driveToScore.build(), // Renamed from tab4
+                unifiedActions.unLoad(0.2),
+                unifiedActions.UnLoadShooter(1)
+        );
+
+//// 3. Define Logical Phases
+        Action scorePreload = new SequentialAction(
+                driveToShootingPose.build(), // Renamed from tab1
+                unifiedActions.shoot(),
+                conv.stop()
+        );
+
+        Action scoreSample1 = new SequentialAction(
+                new ParallelAction(
+                        driveToSample2.build(), // Renamed from tab3
+                        unifiedActions.UnLoadShooter(2.5)
+                ),
+                unifiedActions.stopLoad(),
+                spinUpAndMoveToScore,
+                conv.stop(),
+                unifiedActions.UnLoadShooter(0.2),
+                unifiedActions.shoot(),
+                unifiedActions.stopShot()
+        );
+
+        Action park = driveToSubmersible.build();
+
+//// 4. The Final Sequence is now readable like English
+        Action fullAutoRoutine = new SequentialAction(
+                scorePreload,
+                prepareShotAndMove,
+                scoreSample1,
+                park
+        );
+
+        waitForStart();
+
+        if (isStopRequested()) return;
+
+        Actions.runBlocking(fullAutoRoutine);
+        Stats.currentPose = drive.localizer.getPose();
+
 //
 //        Action tot = new SequentialAction(
 //                driveToShootingPose.build(),
@@ -128,16 +134,14 @@ public class BlueBasketAuto extends LinearOpMode {
 //                unifiedActions.stopShot(),
 //                driveToSubmersible.build()
 //        );
-
-        Action check = unifiedActions.shoot();
-
-        waitForStart();
-
-        if (isStopRequested()) return;
-
-        Actions.runBlocking(
-                check
-        );
+//
+//        waitForStart();
+//
+//        if (isStopRequested()) return;
+//
+//        Actions.runBlocking(
+//                tot
+//        );
 
 
 
