@@ -30,8 +30,8 @@ public class BlueBasketAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(-54, -54, Math.toRadians(45));
-        Vector2d shootingPose = new Vector2d(-18, -18);
+        Pose2d initialPose = new Pose2d(-56, -56, Math.toRadians(45));
+        Vector2d shootingPose = new Vector2d(-24, -34);
 
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
@@ -47,19 +47,19 @@ public class BlueBasketAuto extends LinearOpMode {
         VelConstraint baseVelConstraint = (robotPose, _path, _disp) -> 10.0;
 
 
-        double goalHeading = Math.atan2(18 - 72, 18 - 72) + Math.PI;
+        double goalHeading = Math.atan2(34 - 72, 24 - 72) + Math.PI;
 
         TrajectoryActionBuilder driveToShootingPose = drive.actionBuilder(initialPose)
                 .strafeToLinearHeading(shootingPose, goalHeading);
 
         TrajectoryActionBuilder driveToCollect = driveToShootingPose.fresh().
-                strafeToLinearHeading(new Vector2d(-12,-40), Math.PI*3/2 - 0.13);
+                strafeToLinearHeading(new Vector2d(-26,-40), Math.PI*3/2 - 0.13);
 
         TrajectoryActionBuilder  driveToSample2 = driveToCollect.fresh().
-                strafeTo(new Vector2d(-12,-60), baseVelConstraint);
+                strafeTo(new Vector2d(-26,-60), baseVelConstraint);
 
         TrajectoryActionBuilder  driveToScore =  driveToSample2.fresh()
-                .strafeToLinearHeading(new Vector2d(24,-44), Math.PI*3/2)
+                .strafeToLinearHeading(new Vector2d(-26,-44), Math.PI*3/2)
                 .strafeToLinearHeading(shootingPose, goalHeading);
 
         TrajectoryActionBuilder driveToSubmersible =  driveToScore.fresh().
@@ -71,40 +71,41 @@ public class BlueBasketAuto extends LinearOpMode {
 
         Action prepareShotAndMove = new ParallelAction(
                 unifiedActions.stopShot(),
-                driveToCollect.build(), // Renamed from tab2
-                unifiedActions.load(),
-                unifiedActions.UnLoadShooter(0.5)
+                unifiedActions.UnLoadShooter(0.2),
+                driveToCollect.build(),
+                unifiedActions.load()
+
         );
 
         Action spinUpAndMoveToScore = new ParallelAction(
-                driveToScore.build(), // Renamed from tab4
+                driveToScore.build(),
                 unifiedActions.unLoad(0.2),
                 unifiedActions.UnLoadShooter(1)
         );
 
-//// 3. Define Logical Phases
+
         Action scorePreload = new SequentialAction(
-                driveToShootingPose.build(), // Renamed from tab1
+                driveToShootingPose.build(),
                 unifiedActions.shoot(),
-                conv.stop()
+                unifiedActions.stopShot()
         );
 
         Action scoreSample1 = new SequentialAction(
-                new ParallelAction(
-                        driveToSample2.build(), // Renamed from tab3
-                        unifiedActions.UnLoadShooter(2.5)
-                ),
+                driveToSample2.build(),
                 unifiedActions.stopLoad(),
                 spinUpAndMoveToScore,
                 conv.stop(),
-                unifiedActions.UnLoadShooter(0.2),
+                new ParallelAction(
+                        unifiedActions.UnLoadShooter(0.2),
+                        unifiedActions.unLoad(1)
+                ),
                 unifiedActions.shoot(),
                 unifiedActions.stopShot()
         );
 
         Action park = driveToSubmersible.build();
 
-//// 4. The Final Sequence is now readable like English
+
         Action fullAutoRoutine = new SequentialAction(
                 scorePreload,
                 prepareShotAndMove,
@@ -118,34 +119,6 @@ public class BlueBasketAuto extends LinearOpMode {
 
         Actions.runBlocking(fullAutoRoutine);
         Stats.currentPose = drive.localizer.getPose();
-
-//
-//        Action tot = new SequentialAction(
-//                driveToShootingPose.build(),
-//                unifiedActions.unLoad(0.1),
-//                conv.stop(),
-//                unifiedActions.shoot(),
-//                new ParallelAction(unifiedActions.stopShot(), driveToCollect.build(),unifiedActions.load()),
-//                driveToSample2.build(),
-//                unifiedActions.stopLoad(),
-//                new ParallelAction( driveToScore.build(), shooter.spinUp(),unifiedActions.unLoad(0.3)),
-//                conv.stop(),
-//                unifiedActions.shoot(),
-//                unifiedActions.stopShot(),
-//                driveToSubmersible.build()
-//        );
-//
-//        waitForStart();
-//
-//        if (isStopRequested()) return;
-//
-//        Actions.runBlocking(
-//                tot
-//        );
-
-
-
-
 
 
     }

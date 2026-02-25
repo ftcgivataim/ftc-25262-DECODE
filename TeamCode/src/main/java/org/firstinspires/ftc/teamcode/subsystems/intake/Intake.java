@@ -29,7 +29,7 @@ public class Intake {
     }
 
     public Action spinDown(){
-        return new InstantAction(() -> intakeMotor.setPower(-1));
+        return new InstantAction(() -> intakeMotor.setPower(-0.2));
     }
 
 //    public class Stop implements Action {

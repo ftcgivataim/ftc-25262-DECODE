@@ -270,7 +270,7 @@ public class PrimaryOpMode extends LinearOpMode {
                     runningActions.add(unifiedActions.stopLoad()); // Safety stop
 
                     // Create NEW action and store it
-                    activeIntakeAction = new ParallelAction(conv.unLoad(), unifiedActions.UnLoadShooter(0.1));
+                    activeIntakeAction = new ParallelAction(conv.unLoad(), intake.spinDown(), shooter.unloadShooter(-0.07));
                     runningActions.add(activeIntakeAction);
 
                     currentIntakeState = IntakeState.UNLOADING;
@@ -299,7 +299,6 @@ public class PrimaryOpMode extends LinearOpMode {
                     // Remove the specifically running action
                     if (activeIntakeAction != null) {
                         runningActions.remove(activeIntakeAction);
-                        runningActions.add(shooter.stop());
                     }
 
                     // Run the stop action

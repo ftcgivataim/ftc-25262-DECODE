@@ -14,7 +14,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Helpers;
 import org.firstinspires.ftc.teamcode.Stats;
-import org.firstinspires.ftc.teamcode.sensors.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.subsystems.UnifiedActions;
 import org.firstinspires.ftc.teamcode.subsystems.conv.Conv;
 import org.firstinspires.ftc.teamcode.subsystems.drivetrain.MecanumDrive;
@@ -22,16 +21,21 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter;
 
 @Config
-@Autonomous(name = "Blue Wall Auto")
-public class BlueWallAuto extends LinearOpMode {
+@Autonomous(name = "Red Basket Auto")
+public class RedBasketAuto extends LinearOpMode {
+
+    // 1. Define Constants for Tuning (allows Dashboard use)
+    public static double UNLOAD_TIME_SHORT = 0.1;
+    public static double UNLOAD_TIME_LONG = 0.3;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(63, -9, Math.toRadians(0));
+        Pose2d initialPose = new Pose2d(-56, 56, Math.toRadians(315));
+        Vector2d shootingPose = new Vector2d(-24, 34);
+
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
-//        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
         Conv conv = new Conv(hardwareMap);
         Intake intake = new Intake(hardwareMap);
@@ -42,42 +46,45 @@ public class BlueWallAuto extends LinearOpMode {
         VelConstraint baseVelConstraint = (robotPose, _path, _disp) -> 10.0;
 
 
-        double goalHeading = Math.atan2(-72 + 18, 18 - 72) + Math.PI;
+        double goalHeading = Math.atan2(-34 + 72, 24 - 72) + Math.PI;
 
         TrajectoryActionBuilder driveToShootingPose = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(new Vector2d(-18,-18), goalHeading);
+                .strafeToLinearHeading(shootingPose, goalHeading);
 
         TrajectoryActionBuilder driveToCollect = driveToShootingPose.fresh().
-                strafeToLinearHeading(new Vector2d(12,-24), Math.PI*3/2 - 0.13);
+                strafeToLinearHeading(new Vector2d(-4,30), Math.PI/2 + 0.13);
 
         TrajectoryActionBuilder  driveToSample2 = driveToCollect.fresh().
-                strafeTo(new Vector2d(12,-56), baseVelConstraint);
+                strafeTo(new Vector2d(-4,60), baseVelConstraint);
 
-        TrajectoryActionBuilder driveToScore =  driveToSample2.fresh()
-                .strafeToLinearHeading(new Vector2d(12,-24), Math.PI*3/2)
-                .strafeToLinearHeading(new Vector2d(-18,-18), goalHeading);
+        TrajectoryActionBuilder  driveToScore =  driveToSample2.fresh()
+                .strafeToLinearHeading(new Vector2d(-4,44), Math.PI/2)
+                .strafeToLinearHeading(shootingPose, goalHeading);
 
-        TrajectoryActionBuilder driveToSubmersible = driveToScore.fresh().
-                strafeToLinearHeading(new Vector2d(32,-50), 0);
+        TrajectoryActionBuilder driveToSubmersible =  driveToScore.fresh().
+                strafeToLinearHeading(new Vector2d(32,50), 0);
 
 
 
         Action prepareShotAndMove = new ParallelAction(
                 unifiedActions.stopShot(),
+                unifiedActions.UnLoadShooter(0.2),
                 driveToCollect.build(),
                 unifiedActions.load()
+
         );
 
         Action spinUpAndMoveToScore = new ParallelAction(
                 driveToScore.build(),
-                unifiedActions.unLoad(0.2)
+                unifiedActions.unLoad(0.2),
+                unifiedActions.UnLoadShooter(1)
         );
 
 
         Action scorePreload = new SequentialAction(
                 driveToShootingPose.build(),
                 unifiedActions.shoot(),
-                conv.stop()
+                unifiedActions.stopShot()
         );
 
         Action scoreSample1 = new SequentialAction(
@@ -85,7 +92,10 @@ public class BlueWallAuto extends LinearOpMode {
                 unifiedActions.stopLoad(),
                 spinUpAndMoveToScore,
                 conv.stop(),
-                unifiedActions.UnLoadShooter(0.2),
+                new ParallelAction(
+                        unifiedActions.UnLoadShooter(0.2),
+                        unifiedActions.unLoad(1)
+                ),
                 unifiedActions.shoot(),
                 unifiedActions.stopShot()
         );
@@ -108,34 +118,6 @@ public class BlueWallAuto extends LinearOpMode {
         Stats.currentPose = drive.localizer.getPose();
 
 
+
     }
 }
-
-
-//        Action tot = new SequentialAction(
-//                tab1.build(),
-//                unifiedActions.unLoad(0.5),
-//                conv.stop(),
-//                unifiedActions.shoot(),
-//                unifiedActions.stopShot(),
-//                tab2.build(),
-//                unifiedActions.load(),
-//                tab3.build(),
-//                unifiedActions.stopLoad(),
-//                tab4.build(),
-//                unifiedActions.shoot(),
-//                unifiedActions.stopShot(),
-//                tabClose.build()
-//        );
-//
-//        waitForStart();
-//
-//        if (isStopRequested()) return;
-//
-//        Actions.runBlocking(
-//                tot
-//        );
-//
-//
-//    }
-//}
