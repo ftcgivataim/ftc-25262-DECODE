@@ -25,12 +25,16 @@ public class Conv {
 
     public class Load implements Action {
         private boolean initialized = false;
+        double power;
+        public Load(double power) {
+            this.power = power;
+        }
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
             if (!initialized) {
                 convMotor.setDirection(DcMotor.Direction.REVERSE);
-                convMotor.setPower(0.08);
+                convMotor.setPower(power);
                 initialized = true;
             }
 
@@ -46,8 +50,8 @@ public class Conv {
         }
     }
 
-    public Action load(){
-        return new Load();
+    public Action load(double power){
+        return new Load(power);
     }
 
 

@@ -30,7 +30,7 @@ import org.firstinspires.ftc.teamcode.subsystems.drivetrain.MecanumDrive;
  */
 
 @Config
-@Autonomous(name = "Blue Basket Autonomous", group = "Autonomous")
+@Autonomous(name = "idk")
 public class BlueBasketAutonomous extends LinearOpMode {
 
     // Starting position - Blue alliance starting zone

@@ -1,8 +1,7 @@
-package org.firstinspires.ftc.teamcode.autonomous;
+package org.firstinspires.ftc.teamcode.autonomous.untested;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -22,73 +21,57 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter;
 
 @Config
-@Autonomous(name = "Blue Basket Auto")
-public class BlueBasketAuto extends LinearOpMode {
-
-    // 1. Define Constants for Tuning (allows Dashboard use)
-    public static double UNLOAD_TIME_SHORT = 0.1;
-    public static double UNLOAD_TIME_LONG = 0.3;
+@Autonomous(name = "Red Far Auto")
+public class RedFar extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(-56, -56, Math.toRadians(45));
-        Vector2d shootingPose = new Vector2d(-24, -34);
-
+        Pose2d initialPose = new Pose2d(63, 9, Math.toRadians(0));
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
-////        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+//        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
         Conv conv = new Conv(hardwareMap);
         Intake intake = new Intake(hardwareMap);
-        Shooter shooter = new Shooter(hardwareMap, Helpers.GOAL_POSE_BLUE);
+        Shooter shooter = new Shooter(hardwareMap, Helpers.GOAL_POSE_RED);
 
         UnifiedActions unifiedActions = new UnifiedActions(conv, shooter, intake);
 
+        VelConstraint baseVelConstraint = (robotPose, _path, _disp) -> 10.0;
 
 
-        double goalHeading = Math.atan2(34 - 72, 24 - 72) + Math.PI;
+        double goalHeading = Math.atan2(72 - 52, 9 - 72) + Math.PI;
 
         TrajectoryActionBuilder driveToShootingPose = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(shootingPose, goalHeading);
+                .strafeToLinearHeading(new Vector2d(52, -9), goalHeading);
 
         TrajectoryActionBuilder driveToCollect = driveToShootingPose.fresh().
-                strafeToLinearHeading(new Vector2d(-26,-40), Math.PI*3/2 - 0.13);
+                strafeTo(new Vector2d(56, 56));
 
-        TrajectoryActionBuilder  driveToSample2 = driveToCollect.fresh().
-                strafeTo(new Vector2d(-26,-60));
+        TrajectoryActionBuilder driveToSample2 = driveToCollect.fresh().
+                strafeTo(new Vector2d(32, -60), baseVelConstraint);
 
-        TrajectoryActionBuilder  driveToScore =  driveToSample2.fresh()
-                .strafeToLinearHeading(new Vector2d(-26,-44), Math.PI*3/2)
-                .strafeToLinearHeading(shootingPose, goalHeading);
-
-        TrajectoryActionBuilder driveToSubmersible =  driveToScore.fresh().
-                waitSeconds(7).
-                strafeToLinearHeading(new Vector2d(32,-50), 0)
-               ;
-
-
-
+        TrajectoryActionBuilder driveToScore = driveToSample2.fresh()
+                .strafeToLinearHeading(new Vector2d(32, -40), Math.PI * 3 / 2)
+                .strafeToLinearHeading(new Vector2d(60, -9), goalHeading);
 
 
         Action prepareShotAndMove = new ParallelAction(
                 unifiedActions.stopShot(),
-                unifiedActions.UnLoadShooter(0.2),
                 driveToCollect.build(),
                 unifiedActions.load(0.08)
-
         );
 
         Action spinUpAndMoveToScore = new ParallelAction(
                 driveToScore.build(),
-                unifiedActions.unLoad(0.2),
-                unifiedActions.UnLoadShooter(1)
+                unifiedActions.unLoad(0.2)
         );
 
 
         Action scorePreload = new SequentialAction(
                 driveToShootingPose.build(),
-                unifiedActions.shoot(),
+                unifiedActions.shoot(925),
                 unifiedActions.stopShot()
         );
 
@@ -97,22 +80,15 @@ public class BlueBasketAuto extends LinearOpMode {
                 unifiedActions.stopLoad(),
                 spinUpAndMoveToScore,
                 conv.stop(),
-                new ParallelAction(
-                        unifiedActions.UnLoadShooter(0.2),
-                        unifiedActions.unLoad(1)
-                ),
+                unifiedActions.UnLoadShooter(0.2),
                 unifiedActions.shoot(),
                 unifiedActions.stopShot()
         );
 
-        Action park = driveToSubmersible.build();
-
 
         Action fullAutoRoutine = new SequentialAction(
                 scorePreload,
-                prepareShotAndMove,
-                scoreSample1,
-                park
+                driveToCollect.build()
         );
 
         waitForStart();
@@ -121,7 +97,6 @@ public class BlueBasketAuto extends LinearOpMode {
 
         Actions.runBlocking(fullAutoRoutine);
         Stats.currentPose = drive.localizer.getPose();
-
 
     }
 }

@@ -4,17 +4,11 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.ParallelAction;
-import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -33,20 +27,18 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 
 @Config
-@TeleOp(name = "BluePrimaryOpMode")
-public class PrimaryOpMode extends LinearOpMode {
+@TeleOp(name = "SelfBluePrimaryOpMode")
+public class SelfBluePrimaryOpMode extends LinearOpMode {
 
     private final FtcDashboard dash = FtcDashboard.getInstance();
     private List<Action> runningActions = new ArrayList<>();
 
     public static class Params {
-        public double speedMult = 0.7;
+        public double speedMult = 1;
         public double turnMult = 1;
 
         public double backMotorMult = 1;
@@ -147,6 +139,12 @@ public class PrimaryOpMode extends LinearOpMode {
 
 
         boolean goalLock = false;
+        boolean reverse = false;
+
+
+        boolean prevB = false;
+        boolean prevRev = false;
+
 
         double prevAngle = 0;
 
@@ -167,11 +165,23 @@ public class PrimaryOpMode extends LinearOpMode {
                             Inputs and Initializing
                ################################################## */
 
-            double y = -gamepad2.left_stick_y; // Remember, Y stick value is reversed
-            double x = gamepad2.left_stick_x;
+            double y = gamepad2.left_stick_y; // Remember, Y stick value is reversed
+            double x = -gamepad2.left_stick_x;
             double rx = gamepad2.right_stick_x;
 
-            goalLock = gamepad2.b ^ goalLock;
+            if (gamepad2.a && !prevRev){
+                reverse = !reverse;
+            }
+            if (reverse) {
+                y *= -1;
+                x *= -1;
+            }
+            prevRev = gamepad2.a;
+
+            if (gamepad2.b && !prevB){
+                goalLock = ! goalLock;
+            }
+            prevB = gamepad2.b;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
@@ -197,30 +207,32 @@ public class PrimaryOpMode extends LinearOpMode {
             double error = calcError(botHeading+Math.PI, goalAngle,telemetry); // Use unwrapping here
 
 
-            double rotX = x * Math.cos(botHeading) - y * Math.sin(-botHeading);
-            double rotY = x * Math.sin(-botHeading) + y * Math.cos(botHeading);
+            double rotX = x;
+            double rotY = y;
 
             rotX *= PARAMS.speedMult;
             rotY *= PARAMS.speedMult;
 
             if (goalLock) {
+                telemetry.addData("Goal Lock","#####");
                 if (Math.abs(error) >= 0.07)
                     rx = -pid.calculate(0,error);
                 else
                     rx = 0;
             } else {
+                telemetry.addData("Goal Lock","-----");
                 rx *= PARAMS.turnMult;
             }
 
 
             if (gamepad2.left_trigger != 0) {
-                PARAMS.speedMult = 1;
-            }
-            else if (gamepad2.left_bumper) {
                 PARAMS.speedMult = 0.5;
             }
-            else {
+            else if (gamepad2.left_bumper) {
                 PARAMS.speedMult = 0.7;
+            }
+            else {
+                PARAMS.speedMult = 1;
             }
 
             /* ##################################################
@@ -259,6 +271,7 @@ public class PrimaryOpMode extends LinearOpMode {
                ################################################## */
             boolean isPressingUnload = gamepad1.x;
             boolean isPressingLoad   = gamepad1.a;
+            boolean isFasterLoad = gamepad1.right_bumper;
 
             // 1. UNLOAD
             if (isPressingUnload) {
@@ -286,7 +299,12 @@ public class PrimaryOpMode extends LinearOpMode {
                     runningActions.add(unifiedActions.stopLoad());
 
                     // Create NEW action and store it
-                    activeIntakeAction = unifiedActions.load();
+                    if (!isFasterLoad) {
+                        activeIntakeAction = unifiedActions.load(0.08);
+                    }
+                    else {
+                        activeIntakeAction = unifiedActions.load(0.12);
+                    }
                     runningActions.add(activeIntakeAction);
 
                     currentIntakeState = IntakeState.LOADING;

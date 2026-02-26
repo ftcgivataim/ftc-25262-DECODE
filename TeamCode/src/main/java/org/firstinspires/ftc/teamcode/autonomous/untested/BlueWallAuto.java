@@ -1,8 +1,7 @@
-package org.firstinspires.ftc.teamcode.autonomous;
+package org.firstinspires.ftc.teamcode.autonomous.untested;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -22,22 +21,16 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter;
 
 @Config
-@Autonomous(name = "Blue Basket Auto")
-public class BlueBasketAuto extends LinearOpMode {
-
-    // 1. Define Constants for Tuning (allows Dashboard use)
-    public static double UNLOAD_TIME_SHORT = 0.1;
-    public static double UNLOAD_TIME_LONG = 0.3;
+@Autonomous(name = "Blue Wall Auto")
+public class BlueWallAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(-56, -56, Math.toRadians(45));
-        Vector2d shootingPose = new Vector2d(-24, -34);
-
+        Pose2d initialPose = new Pose2d(63, -9, Math.toRadians(0));
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
-////        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+//        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
         Conv conv = new Conv(hardwareMap);
         Intake intake = new Intake(hardwareMap);
@@ -47,49 +40,42 @@ public class BlueBasketAuto extends LinearOpMode {
 
 
 
-        double goalHeading = Math.atan2(34 - 72, 24 - 72) + Math.PI;
+        double goalHeading = Math.atan2(-72 + 18, 18 - 72) + Math.PI;
 
         TrajectoryActionBuilder driveToShootingPose = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(shootingPose, goalHeading);
+                .strafeToLinearHeading(new Vector2d(-18,-18), goalHeading);
 
         TrajectoryActionBuilder driveToCollect = driveToShootingPose.fresh().
-                strafeToLinearHeading(new Vector2d(-26,-40), Math.PI*3/2 - 0.13);
+                strafeToLinearHeading(new Vector2d(12,-24), Math.PI*3/2 - 0.13);
 
         TrajectoryActionBuilder  driveToSample2 = driveToCollect.fresh().
-                strafeTo(new Vector2d(-26,-60));
+                strafeTo(new Vector2d(12,-56));
 
-        TrajectoryActionBuilder  driveToScore =  driveToSample2.fresh()
-                .strafeToLinearHeading(new Vector2d(-26,-44), Math.PI*3/2)
-                .strafeToLinearHeading(shootingPose, goalHeading);
+        TrajectoryActionBuilder driveToScore =  driveToSample2.fresh()
+                .strafeToLinearHeading(new Vector2d(12,-24), Math.PI*3/2)
+                .strafeToLinearHeading(new Vector2d(-18,-18), goalHeading);
 
-        TrajectoryActionBuilder driveToSubmersible =  driveToScore.fresh().
-                waitSeconds(7).
-                strafeToLinearHeading(new Vector2d(32,-50), 0)
-               ;
-
-
+        TrajectoryActionBuilder driveToSubmersible = driveToScore.fresh().
+                strafeToLinearHeading(new Vector2d(32,-50), 0);
 
 
 
         Action prepareShotAndMove = new ParallelAction(
                 unifiedActions.stopShot(),
-                unifiedActions.UnLoadShooter(0.2),
                 driveToCollect.build(),
                 unifiedActions.load(0.08)
-
         );
 
         Action spinUpAndMoveToScore = new ParallelAction(
                 driveToScore.build(),
-                unifiedActions.unLoad(0.2),
-                unifiedActions.UnLoadShooter(1)
+                unifiedActions.unLoad(0.2)
         );
 
 
         Action scorePreload = new SequentialAction(
                 driveToShootingPose.build(),
                 unifiedActions.shoot(),
-                unifiedActions.stopShot()
+                conv.stop()
         );
 
         Action scoreSample1 = new SequentialAction(
@@ -97,10 +83,7 @@ public class BlueBasketAuto extends LinearOpMode {
                 unifiedActions.stopLoad(),
                 spinUpAndMoveToScore,
                 conv.stop(),
-                new ParallelAction(
-                        unifiedActions.UnLoadShooter(0.2),
-                        unifiedActions.unLoad(1)
-                ),
+                unifiedActions.UnLoadShooter(0.2),
                 unifiedActions.shoot(),
                 unifiedActions.stopShot()
         );
@@ -125,3 +108,32 @@ public class BlueBasketAuto extends LinearOpMode {
 
     }
 }
+
+
+//        Action tot = new SequentialAction(
+//                tab1.build(),
+//                unifiedActions.unLoad(0.5),
+//                conv.stop(),
+//                unifiedActions.shoot(),
+//                unifiedActions.stopShot(),
+//                tab2.build(),
+//                unifiedActions.load(),
+//                tab3.build(),
+//                unifiedActions.stopLoad(),
+//                tab4.build(),
+//                unifiedActions.shoot(),
+//                unifiedActions.stopShot(),
+//                tabClose.build()
+//        );
+//
+//        waitForStart();
+//
+//        if (isStopRequested()) return;
+//
+//        Actions.runBlocking(
+//                tot
+//        );
+//
+//
+//    }
+//}

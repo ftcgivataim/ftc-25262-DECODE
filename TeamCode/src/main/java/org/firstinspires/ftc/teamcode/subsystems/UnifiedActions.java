@@ -24,9 +24,17 @@ public class UnifiedActions {
 
     public Action shoot(){
         return new SequentialAction(
-                shooter.spinUp(),
+                shooter.spinUp(794),
                 new SleepAction(0.1),
-                new ParallelAction(intake.spinUp(),conv.load()),
+                new ParallelAction(intake.spinUp(),conv.load(0.08)),
+                new SleepAction(3.5)
+        );
+    }
+    public Action shoot(int vel){
+        return new SequentialAction(
+                shooter.spinUp(vel),
+                new SleepAction(0.1),
+                new ParallelAction(intake.spinUp(),conv.load(0.08)),
                 new SleepAction(3.5)
         );
     }
@@ -45,10 +53,10 @@ public class UnifiedActions {
                 new ParallelAction(conv.stop(), intake.stop())
         );
     }
-    public Action load(){
+    public Action load(double power){
         return new ParallelAction(
                 intake.spinUp(),
-                conv.load()
+                conv.load(power)
         );
     }
     public Action unLoad(double x){

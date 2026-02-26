@@ -58,6 +58,13 @@ public class Shooter {
         double velTPS = 794;
         boolean initialized = false;
 
+        public SpinUp(int vel) {
+            velTPS = vel;
+        }
+        public SpinUp(){
+            velTPS = 794;
+        }
+
 
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
@@ -83,7 +90,7 @@ public class Shooter {
                 return false;
             }
 
-            return velLeft < 792 || velRight < 792;
+            return velLeft < velTPS-2 || velRight < velTPS-2;
         }
 
 
@@ -118,8 +125,12 @@ public class Shooter {
 //    }
 
 
-    public Action spinUp() {
+    public Action spinUp(int vel) {
+        return new SpinUp(vel);
+    }
+    public Action spinUp(){
         return new SpinUp();
+
     }
 
 //    public Action spinUpSecondStage() {

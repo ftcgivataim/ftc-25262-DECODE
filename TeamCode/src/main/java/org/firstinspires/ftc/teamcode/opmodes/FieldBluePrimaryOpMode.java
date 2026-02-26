@@ -4,10 +4,13 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -18,6 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.Helpers;
+import org.firstinspires.ftc.teamcode.Stats;
 import org.firstinspires.ftc.teamcode.sensors.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.subsystems.UnifiedActions;
 import org.firstinspires.ftc.teamcode.subsystems.conv.Conv;
@@ -29,32 +33,29 @@ import java.util.List;
 
 
 @Config
-@TeleOp(name = "RedPrimaryOpMode")
-public class RedPrimaryOpMode extends LinearOpMode {
+@TeleOp(name = "FieldBluePrimaryOpMode")
+public class FieldBluePrimaryOpMode extends LinearOpMode {
 
     private final FtcDashboard dash = FtcDashboard.getInstance();
     private List<Action> runningActions = new ArrayList<>();
 
     public static class Params {
-        public double speedMult = 0.7;
+        public double speedMult = 1;
         public double turnMult = 1;
 
         public double backMotorMult = 1;
         public double frontMotorMult = 1;
 
-        public double shooterSpeed = 1000.0;
+        public double shooterSpeed = 900.0;
 
         public double kP = 1;
         public double kI = 0;
         public double kD = 1;
 
-        public boolean isBlue = false;
+        public boolean isBlue = true;
 
-        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 36, 32, AngleUnit.RADIANS, Math.PI);
-
+//        public Pose2D startingPose = new Pose2D(DistanceUnit.INCH, 36, -32, AngleUnit.RADIANS, Math.PI);
         public Pose2D resetPose = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.RADIANS, Math.PI);
-
-
 
     }
 
@@ -73,6 +74,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         TelemetryPacket packet = new TelemetryPacket();
 
+        Pose2D startingPose = Helpers.rrToSdk(Stats.currentPose);
 
         DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeft");
         DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeft");
@@ -125,7 +127,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
         odo.resetPosAndIMU();
-        odo.setPosition(PARAMS.startingPose);
+        odo.setPosition(startingPose);
         odo.update();
 
         PIDController pid = new PIDController(PARAMS.kP, PARAMS.kI, PARAMS.kD);
@@ -139,6 +141,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
 
 
         boolean goalLock = false;
+        boolean prevB = false;
 
         double prevAngle = 0;
 
@@ -163,7 +166,10 @@ public class RedPrimaryOpMode extends LinearOpMode {
             double x = gamepad2.left_stick_x;
             double rx = gamepad2.right_stick_x;
 
-            goalLock = gamepad2.b ^ goalLock;
+            if (gamepad2.b && !prevB){
+                goalLock = ! goalLock;
+            }
+            prevB = gamepad2.b;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
@@ -186,7 +192,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
                 botHeading += 2*Math.PI;
             }
 
-            double error = calcError(botHeading, goalAngle,telemetry); // Use unwrapping here
+            double error = calcError(botHeading+Math.PI, goalAngle,telemetry); // Use unwrapping here
 
 
             double rotX = x * Math.cos(botHeading) - y * Math.sin(-botHeading);
@@ -196,40 +202,27 @@ public class RedPrimaryOpMode extends LinearOpMode {
             rotY *= PARAMS.speedMult;
 
             if (goalLock) {
-                rx = pid.calculate(0,error);
+                telemetry.addData("Goal Lock","#####");
+                if (Math.abs(error) >= 0.07)
+                    rx = -pid.calculate(0,error);
+                else
+                    rx = 0;
             } else {
+                telemetry.addData("Goal Lock","-----");
                 rx *= PARAMS.turnMult;
             }
 
 
-            //intake
-            /*if (gamepad1.a) {
-                if (!intakeMode) {
-                    runningActions.add(new ParallelAction(
-                            intake.spinUp(),
-                            conv.load()
-                    ));
-                    intakeMode = true;
-                } else {
-                    runningActions.add(new ParallelAction(
-                            intake.stop(),
-                            conv.stop()
-                    ));
-                    intakeMode = false;
-                }
-               }*/
-
-
-
             if (gamepad2.left_trigger != 0) {
-                PARAMS.speedMult = 1;
-            }
-            else if (gamepad2.left_bumper) {
                 PARAMS.speedMult = 0.5;
             }
-            else {
+            else if (gamepad2.left_bumper) {
                 PARAMS.speedMult = 0.7;
             }
+            else {
+                PARAMS.speedMult = 1;
+            }
+
 
             /* ##################################################
                            SHOOTER LOGIC
@@ -243,7 +236,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
 
                 if (!isAlreadyShooting) {
                     // Create a FRESH action
-                    activeShooterAction = shooter.spinUp();
+                    activeShooterAction = shooter.spinUp(794);
                     runningActions.add(activeShooterAction);
                 }
             }
@@ -267,6 +260,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
                ################################################## */
             boolean isPressingUnload = gamepad1.x;
             boolean isPressingLoad   = gamepad1.a;
+            boolean isFasterLoad = gamepad1.right_bumper;
 
             // 1. UNLOAD
             if (isPressingUnload) {
@@ -278,7 +272,7 @@ public class RedPrimaryOpMode extends LinearOpMode {
                     runningActions.add(unifiedActions.stopLoad()); // Safety stop
 
                     // Create NEW action and store it
-                    activeIntakeAction = conv.unLoad();
+                    activeIntakeAction = new ParallelAction(conv.unLoad(), intake.spinDown(), shooter.unloadShooter(-0.07));
                     runningActions.add(activeIntakeAction);
 
                     currentIntakeState = IntakeState.UNLOADING;
@@ -294,7 +288,12 @@ public class RedPrimaryOpMode extends LinearOpMode {
                     runningActions.add(unifiedActions.stopLoad());
 
                     // Create NEW action and store it
-                    activeIntakeAction = unifiedActions.load();
+                    if (!isFasterLoad) {
+                        activeIntakeAction = unifiedActions.load(0.08);
+                    }
+                    else {
+                        activeIntakeAction = unifiedActions.load(0.12);
+                    }
                     runningActions.add(activeIntakeAction);
 
                     currentIntakeState = IntakeState.LOADING;
@@ -375,7 +374,6 @@ public class RedPrimaryOpMode extends LinearOpMode {
             telemetry.addData("botHeading", Math.toDegrees(botHeading));
             telemetry.addData("goalAngle", Math.toDegrees(Helpers.getAngleToBasket(odo.getPosition(), PARAMS.isBlue)));
             telemetry.addData("prevAngle", Math.toDegrees(prevAngle));
-            telemetry.addData("error", error);
             telemetry.addData("shooterSpeed", PARAMS.shooterSpeed);
             telemetry.addData("rightSpeed", rightMotor.getVelocity());
             telemetry.addData("leftSpeed", leftMotor.getVelocity());
@@ -395,19 +393,24 @@ public class RedPrimaryOpMode extends LinearOpMode {
     }
 
     private double calcError(double current, double target, Telemetry t) {
-        double eDistRight = (current - target) % (2 * Math.PI);
-        double eDistLeft = (target - current) % (2 * Math.PI);
-        if (eDistRight > eDistLeft) {
-            t.addData("left", eDistLeft);
-            return -eDistLeft;
+        // 1. Calculate the raw difference
+        double error = target - current;
+
+        // 2. Normalize the error to be between -PI and +PI
+        while (error > Math.PI) {
+            error -= 2 * Math.PI;
+        }
+        while (error < -Math.PI) {
+            error += 2 * Math.PI;
         }
 
-        t.addData("right", eDistRight);
-        return eDistRight;
+        // Telemetry for debugging
+        t.addData("Raw Target", target);
+        t.addData("error Heading", current);
+        t.addData("Calculated Error", error);
+
+        return error;
     }
 
-    private void prepareToShoot() {
-
-    }
 
 }

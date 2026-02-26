@@ -43,7 +43,6 @@ public class RedBasketAuto extends LinearOpMode {
 
         UnifiedActions unifiedActions = new UnifiedActions(conv, shooter, intake);
 
-        VelConstraint baseVelConstraint = (robotPose, _path, _disp) -> 10.0;
 
 
         double goalHeading = Math.atan2(-34 + 72, 24 - 72) + Math.PI;
@@ -52,16 +51,17 @@ public class RedBasketAuto extends LinearOpMode {
                 .strafeToLinearHeading(shootingPose, goalHeading);
 
         TrajectoryActionBuilder driveToCollect = driveToShootingPose.fresh().
-                strafeToLinearHeading(new Vector2d(-4,30), Math.PI/2 + 0.13);
+                strafeToLinearHeading(new Vector2d(-3,30), Math.PI/2 + 0.13);
 
         TrajectoryActionBuilder  driveToSample2 = driveToCollect.fresh().
-                strafeTo(new Vector2d(-4,60), baseVelConstraint);
+                strafeTo(new Vector2d(-3,60));
 
         TrajectoryActionBuilder  driveToScore =  driveToSample2.fresh()
-                .strafeToLinearHeading(new Vector2d(-4,44), Math.PI/2)
+                .strafeToLinearHeading(new Vector2d(-3,44), Math.PI/2)
                 .strafeToLinearHeading(shootingPose, goalHeading);
 
         TrajectoryActionBuilder driveToSubmersible =  driveToScore.fresh().
+                waitSeconds(7).
                 strafeToLinearHeading(new Vector2d(32,50), 0);
 
 
@@ -70,7 +70,7 @@ public class RedBasketAuto extends LinearOpMode {
                 unifiedActions.stopShot(),
                 unifiedActions.UnLoadShooter(0.2),
                 driveToCollect.build(),
-                unifiedActions.load()
+                unifiedActions.load(0.08)
 
         );
 
@@ -106,8 +106,7 @@ public class RedBasketAuto extends LinearOpMode {
         Action fullAutoRoutine = new SequentialAction(
                 scorePreload,
                 prepareShotAndMove,
-                scoreSample1,
-                park
+                scoreSample1
         );
 
         waitForStart();

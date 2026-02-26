@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.autonomous;
+package org.firstinspires.ftc.teamcode.autonomous.untested;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Action;
@@ -12,8 +12,8 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.Helpers;
 import org.firstinspires.ftc.teamcode.Stats;
-import org.firstinspires.ftc.teamcode.sensors.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.subsystems.UnifiedActions;
 import org.firstinspires.ftc.teamcode.subsystems.conv.Conv;
 import org.firstinspires.ftc.teamcode.subsystems.drivetrain.MecanumDrive;
@@ -21,46 +21,46 @@ import org.firstinspires.ftc.teamcode.subsystems.intake.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.shooter.Shooter;
 
 @Config
-@Autonomous(name = "Red Wall Auto")
-public class RedWallAuto extends LinearOpMode {
+@Autonomous(name = "Blue Far Auto")
+public class BlueFar extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Pose2d initialPose = new Pose2d(63, 9, Math.toRadians(0));
+        Pose2d initialPose = new Pose2d(63, -9, Math.toRadians(0));
 
         MecanumDrive drive = new MecanumDrive(hardwareMap, initialPose);
 
-        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+//        GoBildaPinpointDriver odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
 
         Conv conv = new Conv(hardwareMap);
         Intake intake = new Intake(hardwareMap);
-        Shooter shooter = new Shooter(hardwareMap, odo.getPosition());
+        Shooter shooter = new Shooter(hardwareMap, Helpers.GOAL_POSE_BLUE);
 
         UnifiedActions unifiedActions = new UnifiedActions(conv, shooter, intake);
 
         VelConstraint baseVelConstraint = (robotPose, _path, _disp) -> 10.0;
 
 
+        double goalHeading = Math.atan2(72 - 52, 9 - 72) + Math.PI*8/7;
+
         TrajectoryActionBuilder driveToShootingPose = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(new Vector2d(-18,18), Math.atan2(72-18,18-72));
+                .strafeToLinearHeading(new Vector2d(52, -9), goalHeading);
 
         TrajectoryActionBuilder driveToCollect = driveToShootingPose.fresh().
-                strafeToLinearHeading(new Vector2d(-12,40), Math.PI/2 + 0.13);
+                strafeTo(new Vector2d(56, -56));
 
         TrajectoryActionBuilder driveToSample2 = driveToCollect.fresh().
-                strafeTo(new Vector2d(-12,56), baseVelConstraint);
+                strafeTo(new Vector2d(32, -60), baseVelConstraint);
 
         TrajectoryActionBuilder driveToScore = driveToSample2.fresh()
-                .strafeToLinearHeading(new Vector2d(-12,24), Math.PI/2)
-                .strafeToLinearHeading(new Vector2d(-18,18), Math.atan2(72-18,18-72));
+                .strafeToLinearHeading(new Vector2d(32, -40), Math.PI * 3 / 2)
+                .strafeToLinearHeading(new Vector2d(60, -9), goalHeading);
 
-        TrajectoryActionBuilder driveToSubmersible = driveToScore.fresh().
-                strafeToLinearHeading(new Vector2d(32,50), Math.PI);
 
         Action prepareShotAndMove = new ParallelAction(
                 unifiedActions.stopShot(),
                 driveToCollect.build(),
-                unifiedActions.load()
+                unifiedActions.load(0.08)
         );
 
         Action spinUpAndMoveToScore = new ParallelAction(
@@ -71,8 +71,8 @@ public class RedWallAuto extends LinearOpMode {
 
         Action scorePreload = new SequentialAction(
                 driveToShootingPose.build(),
-                unifiedActions.shoot(),
-                conv.stop()
+                unifiedActions.shoot(925),
+                unifiedActions.stopShot()
         );
 
         Action scoreSample1 = new SequentialAction(
@@ -85,14 +85,10 @@ public class RedWallAuto extends LinearOpMode {
                 unifiedActions.stopShot()
         );
 
-        Action park = driveToSubmersible.build();
-
 
         Action fullAutoRoutine = new SequentialAction(
                 scorePreload,
-                prepareShotAndMove,
-                scoreSample1,
-                park
+                driveToCollect.build()
         );
 
         waitForStart();
@@ -101,34 +97,6 @@ public class RedWallAuto extends LinearOpMode {
 
         Actions.runBlocking(fullAutoRoutine);
         Stats.currentPose = drive.localizer.getPose();
-
-
-
-//        Action tot = new SequentialAction(
-//                tab1.build(),
-//                conv.unLoad(),
-//                tab1.fresh().waitSeconds(0.5).build(),
-//                conv.stop(),
-//                unifiedActions.shoot(),
-//                unifiedActions.stopShot(),
-//                tab2.build(),
-//                unifiedActions.load(),
-//                tab3.build(),
-//                unifiedActions.stopLoad(),
-//                tab4.build(),
-//                unifiedActions.shoot(),
-//                unifiedActions.stopShot(),
-//                tabClose.build()
-//        );
-//
-//        waitForStart();
-//
-//        if (isStopRequested()) return;
-//
-//        Actions.runBlocking(
-//                tot
-//        );
-
 
     }
 }
